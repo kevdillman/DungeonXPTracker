@@ -63,10 +63,11 @@ dungeonFrame:SetScript("OnEvent",
             flushTable()
         end
 
-        -- on first XP gain verifies zone is correct
+        -- on first XP gain records values that may not be loaded earlier
         if (event == "PLAYER_XP_UPDATE" and not areaCheck and inDungeon) then
             if getZone() ~= dungeonRun.dungeon then
-                dungeonRun.dungeon = getZone()
+                dungeonRun.dungeon  = getZone()
+                dungeonRun.charRole = UnitGroupRolesAssigned("player")
             end
             areaCheck = true
         end
@@ -129,11 +130,11 @@ end
 
 -- returns the current zone
 function getZone()
-    local currentZone = WorldMapFrame:GetMapID()
-    local bigMap = C_Map.GetMapInfo(currentZone)
+    --local currentZone = WorldMapFrame:GetMapID()
+    --local bigMap = C_Map.GetMapInfo(currentZone)
     --local zoneID = bigMap(C_Map.GetBestMapForUnit("player"))
-    local mapName = bigMap.name
-    return getZoneBestMap
+    --local mapName = bigMap.name
+    return getZoneBestMap()
 end
 
 function getZoneBestMap()
@@ -173,8 +174,8 @@ function setStartXP()
     dungeonRun.startRest    = GetXPExhaustion()
     dungeonRun.startLVL     = UnitLevel("player")
     dungeonRun.startMoney   = math.floor((GetMoney()/10000))
-    dungeonRun.dungeon      = getZone()
-    dungeonRun.charRole     = UnitGroupRolesAssigned("player")
+    dungeonRun.dungeon      = ""
+    dungeonRun.charRole     = "" --UnitGroupRolesAssigned("player")
     areaCheck               = false
 end
 
