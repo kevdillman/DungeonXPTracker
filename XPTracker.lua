@@ -139,16 +139,29 @@ function getZone()
 end
 
 function getZoneBestMap()
-    local Map_unit = C_Map.GetBestMapForUnit
-    local zoneText, temp, temp1 = C_Map.GetMapInfo(Map_unit("player"))
+    local Map_unit = false
+    local zoneText = false
+
+    if C_Map.GetBestMapForUnit ~= nil then
+        Map_unit = C_Map.GetBestMapForUnit
+    end
+
+    if Map_unit then
+        local zoneText, temp, temp1 = C_Map.GetMapInfo(Map_unit("player"))
+    end
+    --local Map_unit = C_Map.GetBestMapForUnit
+    --local zoneText, temp, temp1 = C_Map.GetMapInfo(Map_unit("player"))
 
     --local currentZone = WorldMapFrame:GetMapID()
     --local bigMap = C_Map.GetMapInfo(currentZone)
     --local zoneID = C_Map.GetBestMapForUnit("player")
     --local mapName = bigMap.name
-    print("The zoneText is: ", zoneText.name)
-    print("The zoneText dump is: ", dump(zoneText))
-    return zoneText.name
+    if zoneText then
+        return zoneText.name
+    end
+    --print("The zoneText is: ", zoneText.name)
+    --print("The zoneText dump is: ", dump(zoneText))
+    return zoneText
 end
 
 function dump(o)
