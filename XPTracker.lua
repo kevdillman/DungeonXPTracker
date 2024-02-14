@@ -69,6 +69,7 @@ dungeonFrame:SetScript("OnEvent",
                 dungeonRun.dungeon  = getZone()
                 dungeonRun.charRole = UnitGroupRolesAssigned("player")
             end
+            printZone()
             areaCheck = true
         end
 
@@ -125,7 +126,7 @@ function printCurrentStats()
     print("Current rest XP is:", GetXPExhaustion())
     print("Current max lvl XP is:", UnitXPMax("player"))
     print("Current gold: ", math.floor((GetMoney()/10000)))
-    printZone()
+    --printZone()
 end
 
 -- returns the current zone
