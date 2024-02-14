@@ -31,7 +31,7 @@ def getCategories(data, begginingDelimeter, endingDelimeter):
 
     while (varStart >= 0):
         foundValue = data[varStart + 2:varEnd - 1]
-        #foundValue = foundData
+
         # add value to list if it hasn't been found before
         if foundValue not in csvVariables:
             # categories must be strings, first char past [ will be "
@@ -71,9 +71,7 @@ def getData(data, begginingDelimeter, endingDelimeter, categories):
     varStart, varEnd, foundData = findNextVariable(data, varEnd + 1, begginingDelimeter[1], endingDelimeter[1])
 
     while (varStart >= 0):
-        #foundData = data[varStart+2:varEnd]
         if foundData[0] == '\"':
-            print("found one!: ", foundData)
             foundData = foundData[1:len(foundData) - 2]
         csvVariables[foundCategory] = foundData
 
@@ -85,6 +83,7 @@ def getData(data, begginingDelimeter, endingDelimeter, categories):
 
         # add all of the new found dungeon data to the dictionary
         if foundCategory == -1:
+            # initialize compiledData
             if len(compiledData) == 0:
                 for column in categories:
                     compiledData[column] = [csvVariables[column]]
@@ -100,22 +99,6 @@ def getData(data, begginingDelimeter, endingDelimeter, categories):
         varStart, varEnd, foundData = findNextVariable(data, varEnd + 1, begginingDelimeter[1], endingDelimeter[1])
 
     df = pd.DataFrame(compiledData)
-    print("The dataframe is: \n", df)
-    return df
-
-# work in progress
-# creates a DataFrame from the categorie headings filling each category with every value found
-def createDataFrame(columns, rows):
-
-    index = 0
-    combineData = {}
-    for columnTitle in columns:
-        combineData[columnTitle] = rows
-        index += 1
-
-   # print("the combinded data is: \n", combineData)
-    df = pd.DataFrame(combineData)
-    print("The dataframe is: \n", df)
     return df
 
 def main():
@@ -125,10 +108,7 @@ def main():
     endingDelimeter = [']', ',']
 
     catHeadings = getCategories(parsedDungeonData, begginingDelimeter[0], endingDelimeter[0])
-
     lvlingData = getData(parsedDungeonData, begginingDelimeter, endingDelimeter, catHeadings)
-    #print("The found data is: ", lvlingData)
-    #createDataFrame(catHeadings, lvlingData)
 
     lvlingData.to_csv("./dungeon_runs/dungeonData.csv")
 
