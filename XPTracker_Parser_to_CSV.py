@@ -3,6 +3,7 @@
 # 12 Feb 2024
 
 import pandas as pd
+import numpy as np
 from pathlib import Path
 
 # given a string of data and a start point returns index of [ and ]
@@ -30,16 +31,15 @@ def getCategories(data, begginingDelimeter, endingDelimeter):
         if foundValue not in csvVariables:
             # categories must be strings, first char past [ will be "
             if data[varStart+1] == '\"':
-                #print("the variables are: \n", csvVariables)
-                #print("adding ", foundValue)
-                #print("varStart is: ", varStart, " varEnd is: ", varEnd)
                 csvVariables.append(foundValue)
 
         varStart, varEnd = findNextVariable(data, varEnd + 1, begginingDelimeter, endingDelimeter)
-
+    #print("the variables are: \n", csvVariables)
     return csvVariables
 
-def getData(data, begginingDelimeter, endingDelimeter):
+
+
+def getData(data, begginingDelimeter, endingDelimeter, categories):
     # preload the varStart and varEnd variables
     varStart, varEnd = findNextVariable(data, 0, begginingDelimeter, endingDelimeter)
     csvVariables = list()
@@ -48,16 +48,26 @@ def getData(data, begginingDelimeter, endingDelimeter):
     while (varStart >= 0) and counter < 20:
         foundValue = data[varStart+2:varEnd]
 
-        # add value to list if it hasn't been found before
-            # categories must be strings, first char past [ will be "
-        print("the variables are: \n", csvVariables)
-        print("adding ", foundValue)
-        print("varStart is: ", varStart, " varEnd is: ", varEnd)
         csvVariables.append(foundValue)
         counter += 1
         varStart, varEnd = findNextVariable(data, varEnd + 1, begginingDelimeter, endingDelimeter)
 
     return csvVariables
+
+# work in progress
+# creates a DataFrame from the categorie headings filling each category with every value found
+def createDataFrame(columns, rows):
+
+    index = 0
+    combineData = {}
+    for columnTitle in columns:
+        combineData[columnTitle] = rows
+        index += 1
+
+   # print("the combinded data is: \n", combineData)
+    df = pd.DataFrame(combineData)
+    print("The dataframe is: \n", df)
+    return 0
 
 def main():
     dungeonData = Path('./dungeon_runs/XPTracker.lua').read_text()
@@ -69,7 +79,9 @@ def main():
 
     begginingDelimeter = '='
     endingDelimeter = ','
-    lvlingData = getData(parsedDungeonData[5:len(parsedDungeonData)-1], begginingDelimeter, endingDelimeter)
+    lvlingData = getData(parsedDungeonData[5:len(parsedDungeonData)-1], begginingDelimeter, endingDelimeter, catHeadings)
+
+    createDataFrame(catHeadings, lvlingData)
 
 if __name__ == '__main__':
     main()
