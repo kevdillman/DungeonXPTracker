@@ -6,7 +6,9 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-# given a string of data and a start point returns index of [ and ]
+# given a string of data, start point, and begin/end delimeters
+# returns values between delimeters and delimeter locations
+# returns -1 if end of file
 def findNextVariable(searchData, start, delimeterOne, delimiterTwo):
     varStart = searchData[start:len(searchData)-1].find(delimeterOne) + start
     varEnd = searchData[varStart:len(searchData)-1].find(delimiterTwo) + varStart
@@ -23,7 +25,8 @@ def findNextVariable(searchData, start, delimeterOne, delimiterTwo):
 
     return varStart, varEnd, foundValue
 
-# goes through entire saved variables file adding categories to the list
+# finds all key values in passed data
+# returns list of keys
 def getCategories(data, begginingDelimeter, endingDelimeter):
     # preload the varStart and varEnd variables
     varStart, varEnd, foundData = findNextVariable(data, 0, begginingDelimeter, endingDelimeter)
@@ -42,7 +45,9 @@ def getCategories(data, begginingDelimeter, endingDelimeter):
     #print("the variables are: \n", csvVariables)
     return csvVariables
 
-# returns the category of the data or -2 if no delimeter found
+# finds next key value in data
+# returns key start/end location and key
+# returns -2 if no key found
 def getCategory(data, start, begginingDelimeter, endingDelimeter):
     varStart, varEnd, foundValue = findNextVariable(data, start, begginingDelimeter, endingDelimeter)
 
@@ -59,7 +64,9 @@ def getCategory(data, start, begginingDelimeter, endingDelimeter):
 
     return -2, -2, -2
 
-
+# takes keys, data with keys and values and delimeters
+# maps the data to it's key
+# returns the mapped data as a DataFrame
 def getData(data, begginingDelimeter, endingDelimeter, categories):
     csvVariables = {}
     compiledData = {}
@@ -71,8 +78,11 @@ def getData(data, begginingDelimeter, endingDelimeter, categories):
     varStart, varEnd, foundData = findNextVariable(data, varEnd + 1, begginingDelimeter[1], endingDelimeter[1])
 
     while (varStart >= 0):
+
+        # remove " " from around data values
         if foundData[0] == '\"':
-            foundData = foundData[1:len(foundData) - 2]
+            foundData = foundData[1:len(foundData) - 1]
+
         csvVariables[foundCategory] = foundData
 
         # if wowui returns "a" instead of value change to "No Data"
@@ -107,9 +117,13 @@ def main():
     begginingDelimeter = ['[', '=']
     endingDelimeter = [']', ',']
 
+    # get key values
     catHeadings = getCategories(parsedDungeonData, begginingDelimeter[0], endingDelimeter[0])
+
+    # use key values to map data to keys and get DataFrame from them
     lvlingData = getData(parsedDungeonData, begginingDelimeter, endingDelimeter, catHeadings)
 
+    # output DataFrame as csv
     lvlingData.to_csv("./dungeon_runs/dungeonData.csv")
 
 if __name__ == '__main__':
