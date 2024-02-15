@@ -85,14 +85,14 @@ def getData(data, begginingDelimeter, endingDelimeter, categories):
 
         csvVariables[foundCategory] = foundData
 
-        # if wowui returns "a" instead of value change to "No Data"
+        # if data value initialized to "a" change to "No Data"
         if (foundData == 'a'):
             csvVariables[foundCategory] = ["No Data"]
 
         varStart, varEnd, foundCategory = getCategory(data, varEnd + 1, begginingDelimeter[0], endingDelimeter[0])
 
         # add all of the new found dungeon data to the dictionary
-        if foundCategory == -1:
+        if foundCategory == -1 or foundCategory == -2:
             # initialize compiledData
             if len(compiledData) == 0:
                 for column in categories:
@@ -112,7 +112,8 @@ def getData(data, begginingDelimeter, endingDelimeter, categories):
     return df
 
 def main():
-    dungeonData = Path('./dungeon_runs/XPTracker.lua').read_text()
+    path = Path('./path.txt').read_text()
+    dungeonData = Path(path).read_text()
     parsedDungeonData = dungeonData[dungeonData.find("\"dungeons\"") + 17:]
     begginingDelimeter = ['[', '=']
     endingDelimeter = [']', ',']
