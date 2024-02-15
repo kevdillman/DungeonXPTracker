@@ -248,11 +248,11 @@ end
 
 -- prints the beggining and ending XP values and dungeon
 function printXPValues()
-    print("Start time:",    dungeonRun.startTime,   "  End time: ",  dungeonRun.endingTime)
-    print("Start XP:",      dungeonRun.startXP,     "  End XP: ",     dungeonRun.endingXP)
-    print("Start Rest:",    dungeonRun.startRest,   "  End Rest: ", dungeonRun.endingRest)
-    print("Start LvL:",     dungeonRun.startLVL,    "  End LvL: ",   dungeonRun.endingLVL)
+    print("Start time: ",    dungeonRun.startTime,  "  End time: ",  dungeonRun.endingTime)
+    print("Start XP: ",      dungeonRun.startXP,    "  End XP: ",     dungeonRun.endingXP)
+    print("Start Rest: ",    dungeonRun.startRest,  "  End Rest: ", dungeonRun.endingRest)
+    print("Start LvL: ",     dungeonRun.startLVL,   "  End LvL: ",   dungeonRun.endingLVL)
     print("Start gold: ",   dungeonRun.startMoney,  "  End gold: ", dungeonRun.endingMoney)
-    print("Dungeon was ",   dungeonRun.dungeon)
-    print("Role was: ",     dungeonRun.charRole)
+    print("Dungeon: ",   dungeonRun.dungeon)
+    print("Role: ",     dungeonRun.charRole)
 end
