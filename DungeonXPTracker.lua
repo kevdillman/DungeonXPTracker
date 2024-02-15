@@ -108,11 +108,11 @@ dungeonFrame:SetScript("OnEvent",
 
 -- prints the current zone
 function printZone()
-    local currentZone = WorldMapFrame:GetMapID()
-    local bigMap = C_Map.GetMapInfo(currentZone)
-    --local zoneID = bigMap(C_Map.GetBestMapForUnit("player"))
-    local mapName = bigMap.name
-    print ("You're currently in: ", mapName)
+    --local currentZone = WorldMapFrame:GetMapID()
+    --local bigMap = C_Map.GetMapInfo(currentZone)
+            --local zoneID = bigMap(C_Map.GetBestMapForUnit("player"))
+    --local mapName = bigMap.name
+    print ("You're currently in: ", getZoneBestMap())
 end
 
 -- prints the current XP, time, and zone information
@@ -140,14 +140,24 @@ end
 
 function getZoneBestMap()
     local Map_unit = false
-    local zoneText = false
+    local zoneText = "a"
+    local gotMapInfo = false
 
     if C_Map.GetBestMapForUnit ~= nil then
         Map_unit = C_Map.GetBestMapForUnit
+        gotMapInfo = true
+    else
+        print("C_Map.GetBestMapForUnit == nil")
     end
 
-    if Map_unit then
-        local zoneText, temp, temp1 = C_Map.GetMapInfo(Map_unit("player"))
+    if gotMapInfo then
+        gotMapInfo = false
+        if C_Map.GetMapInfo(Map_unit("player")) ~= nil then
+            zoneText, temp, temp1 = C_Map.GetMapInfo(Map_unit("player"))
+            gotMapInfo = true
+        else
+            print("C_Map.GetMapInfo(Map_unit(\"player\")) == nil")
+        end
     end
     --local Map_unit = C_Map.GetBestMapForUnit
     --local zoneText, temp, temp1 = C_Map.GetMapInfo(Map_unit("player"))
@@ -156,7 +166,7 @@ function getZoneBestMap()
     --local bigMap = C_Map.GetMapInfo(currentZone)
     --local zoneID = C_Map.GetBestMapForUnit("player")
     --local mapName = bigMap.name
-    if zoneText then
+    if gotMapInfo then
         return zoneText.name
     end
     --print("The zoneText is: ", zoneText.name)
