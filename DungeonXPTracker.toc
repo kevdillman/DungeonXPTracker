@@ -1,0 +1,8 @@
+## Interface: 100205
+## Version: 0.1
+## Title: XPTracker
+## Notes: Tracks starting and ending XPTracker
+## Author: PuggyBerra
+## SavedVariables: dungeonTracker
+
+XPTracker.lua
