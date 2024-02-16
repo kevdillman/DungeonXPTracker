@@ -114,13 +114,14 @@ def getData(data, begginingDelimeter, endingDelimeter, categories):
     df = pd.DataFrame(compiledData)
     return df
 
+# takes a date time input
+# reformats date time to be read by excel and returns it
 def formatDate(rawDate):
-    dayFromRaw = rawDate[0:2]
     yearFromRaw = "20" + rawDate[6:8]
     monthFromRaw = rawDate[3:5]
+    dayFromRaw = rawDate[0:2]
 
     formattedDate = yearFromRaw + monthFromRaw + dayFromRaw + rawDate[8:]
-    #print("formatted date is: ", formattedDate)
 
     return formattedDate
 
