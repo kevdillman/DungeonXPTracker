@@ -83,6 +83,9 @@ def getData(data, begginingDelimeter, endingDelimeter, categories):
         if foundData[0] == '\"':
             foundData = foundData[1:len(foundData) - 1]
 
+        if foundCategory == "endingTime" or foundCategory == "startTime":
+            foundData = formatDate(foundData)
+
         csvVariables[foundCategory] = foundData
 
         # if data value initialized to "a" change to "No Data"
@@ -110,6 +113,16 @@ def getData(data, begginingDelimeter, endingDelimeter, categories):
 
     df = pd.DataFrame(compiledData)
     return df
+
+def formatDate(rawDate):
+    dayFromRaw = rawDate[0:2]
+    yearFromRaw = "20" + rawDate[6:8]
+    monthFromRaw = rawDate[3:5]
+
+    formattedDate = yearFromRaw + monthFromRaw + dayFromRaw + rawDate[8:]
+    #print("formatted date is: ", formattedDate)
+
+    return formattedDate
 
 def main():
     path = Path('./path.txt').read_text()
