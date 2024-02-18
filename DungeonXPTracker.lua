@@ -187,15 +187,27 @@ function dump(o)
     end
  end
 
+-- gets amount of rest XP or returns 0 if none
+function getRestXP()
+    local endingRest = 0
+
+    if GetXPExhaustion() ~= nil then
+        endingRest = GetXPExhaustion()
+    end
+
+    return endingRest
+end
+
 -- sets the starting XP, rest, and lvl of a dungeon
 function setStartXP()
     local name, temp = UnitName("player")
     local race, temp1, temp2 = UnitRace("player")
+
     dungeonRun.charName     = name
     dungeonRun.charRace     = race
     dungeonRun.startTime    = date("%d/%m/%y %H:%M:%S")
     dungeonRun.startXP      = UnitXP("player")
-    dungeonRun.startRest    = GetXPExhaustion()
+    dungeonRun.startRest    = getRestXP()
     dungeonRun.startLVL     = UnitLevel("player")
     dungeonRun.startMoney   = math.floor((GetMoney()/10000))
     dungeonRun.dungeon      = ""
@@ -205,13 +217,8 @@ end
 
 -- sets the ending XP, rest, and lvl of a dungeon
 function setEndXP()
-    local endingRest = 0
 
-    if GetXPExhaustion() ~= nil then
-        endingRest = GetXPExhaustion()
-    end
-
-    dungeonRun.endingRest    = endingRest
+    dungeonRun.endingRest    = getRestXP()
     dungeonRun.endingTime    = date("%d/%m/%y %H:%M:%S")
     dungeonRun.endingXP      = UnitXP("player")
     dungeonRun.endingLVL     = UnitLevel("player")
@@ -259,10 +266,10 @@ end
 -- prints the beggining and ending XP values and dungeon
 function printXPValues()
     print("Start time: ",    dungeonRun.startTime,  "  End time: ",  dungeonRun.endingTime)
-    print("Start XP: ",      dungeonRun.startXP,    "  End XP: ",     dungeonRun.endingXP)
-    print("Start Rest: ",    dungeonRun.startRest,  "  End Rest: ", dungeonRun.endingRest)
+    print("Start XP: ",      dungeonRun.startXP,    "  End XP: ",    dungeonRun.endingXP)
+    print("Start Rest: ",    dungeonRun.startRest,  "  End Rest: ",  dungeonRun.endingRest)
     print("Start LvL: ",     dungeonRun.startLVL,   "  End LvL: ",   dungeonRun.endingLVL)
-    print("Start gold: ",   dungeonRun.startMoney,  "  End gold: ", dungeonRun.endingMoney)
-    print("Dungeon: ",   dungeonRun.dungeon)
-    print("Role: ",     dungeonRun.charRole)
+    print("Start gold: ",    dungeonRun.startMoney, "  End gold: ",  dungeonRun.endingMoney)
+    print("Dungeon: ",       dungeonRun.dungeon)
+    print("Role: ",          dungeonRun.charRole)
 end
