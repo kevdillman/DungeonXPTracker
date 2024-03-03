@@ -7,7 +7,7 @@ local dungeonFrame = CreateFrame("Frame")
 dungeonFrame:RegisterEvent("ADDON_LOADED")
 dungeonFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 dungeonFrame:RegisterEvent("GROUP_LEFT")
-dungeonFrame:RegisterEvent("PLAYER_XP_UPDATE")
+dungeonFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
 
 local inDungeon = false
 local areaCheck = false
@@ -40,6 +40,7 @@ dungeonFrame:SetScript("OnEvent",
         -- initial entry to dungeon
         if (event == "PLAYER_ENTERING_WORLD" and IsInInstance() and not inDungeon) then
             print("In an instance group! :-D")
+            flushTable()
             printCurrentStats()
             inDungeon = true
             setStartXP()
@@ -51,7 +52,6 @@ dungeonFrame:SetScript("OnEvent",
             inDungeon = false
             setEndXP()
             printXPValues()
-            flushTable()
         end
 
         -- left LFD dungeon outside dungeon
@@ -60,11 +60,10 @@ dungeonFrame:SetScript("OnEvent",
             inDungeon = false
             setEndXP()
             printXPValues()
-            flushTable()
         end
 
-        -- on first XP gain records values that may not be loaded earlier
-        if (event == "PLAYER_XP_UPDATE" and not areaCheck and inDungeon) then
+        -- on first time in combat records values that may not be loaded earlier
+        if (event == "PLAYER_REGEN_DISABLED" and not areaCheck and inDungeon) then
             if getZone() ~= dungeonRun.dungeon then
                 dungeonRun.dungeon  = getZone()
                 dungeonRun.charRole = UnitGroupRolesAssigned("player")
