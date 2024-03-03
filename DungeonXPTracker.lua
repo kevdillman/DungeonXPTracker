@@ -72,11 +72,21 @@ dungeonFrame:SetScript("OnEvent",
             areaCheck = true
         end
 
-        -- allows /xpt to print current dungeon run
+        -- allows /xpt commands
         SLASH_DUNGEONXPTRACKER1 = "/xpt";
+
         function SlashCmdList.DUNGEONXPTRACKER(msg)
-            printXPValues()
-            getZoneBestMap()
+            -- output for default /xpt command and /xpt last
+            if (msg == "" or "last") then
+                printXPValues()
+                print("xpt")
+            end
+
+            -- command /xpt current
+            if (msg == "current") then
+                printCurrentStats()
+                print("current")
+            end
         end
 
         -- on addon load checks saved variable
