@@ -113,7 +113,7 @@ dungeonFrame:SetScript("OnEvent",
 
 -- prints the current zone
 function printZone()
-    print ("You're currently in: ", getZoneBestMap())
+    print ("You're currently in: ", getZone())
 end
 
 -- prints the current XP, time, and zone information
@@ -132,10 +132,6 @@ end
 
 -- returns the current zone
 function getZone()
-    return getZoneBestMap()
-end
-
-function getZoneBestMap()
     local Map_unit = false
     local zoneText = "a"
     local gotMapInfo = false
