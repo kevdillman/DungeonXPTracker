@@ -16,7 +16,7 @@ def findNextVariable(searchData, start, delimeterOne, delimiterTwo):
 
     # if -- does not appear anymore in the file we've reached the end
     if endOfSet == -1:
-        return -1, -1, -1
+        return -1, -1, ""
     foundValue = searchData[varStart+2:varEnd]
 
     if(len(foundValue) > 1):
@@ -79,9 +79,10 @@ def getData(data, begginingDelimeter, endingDelimeter, categories):
 
     while (varStart >= 0):
 
-        # remove " " from around data values
-        if foundData[0] == '\"':
-            foundData = foundData[1:len(foundData) - 1]
+        if (len(foundData) > 0):
+            # remove " " from around data values
+            if foundData[0] == '\"':
+                foundData = foundData[1:len(foundData) - 1]
 
         if foundCategory == "endingTime" or foundCategory == "startTime":
             foundData = formatDate(foundData)
