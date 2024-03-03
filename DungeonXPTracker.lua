@@ -73,13 +73,22 @@ dungeonFrame:SetScript("OnEvent",
 
         function SlashCmdList.DUNGEONXPTRACKER(msg)
             -- output for default /xpt command and /xpt last
+            -- prints the contents of dungeonRun
             if (msg == "" or msg == "last") then
                 printXPValues()
             end
 
             -- command /xpt current
+            -- prints the current character values
             if (msg == "current") then
                 printCurrentStats()
+            end
+
+            -- command /xpt guild
+            -- prints the current character values to guild chat
+            if (msg == "guild") then
+                -- SendChatMessage("guild test",'GUILD')
+                printCurrentStatsGuild()
             end
         end
 
@@ -128,6 +137,21 @@ function printCurrentStats()
     print("Current max lvl XP is:", UnitXPMax("player"))
     print("Current gold: ", math.floor((GetMoney()/10000)))
     printZone()
+end
+
+-- prints current stats in guild chat
+function printCurrentStatsGuild()
+    local name, temp = UnitName("player")
+    local race, temp1, temp2 = UnitRace("player")
+
+    SendChatMessage("You're playing: " .. name,'GUILD')
+    SendChatMessage("You're current race: " .. race,'GUILD')
+    SendChatMessage("The current time is: " .. date("%d/%m/%y %H:%M:%S"), 'GUILD')
+    SendChatMessage("Current XP is: " .. UnitXP("player"), 'GUILD')
+    SendChatMessage("Current rest XP is: " .. getRestXP(), 'GUILD')
+    SendChatMessage("Current max lvl XP is: " .. UnitXPMax("player"), 'GUILD')
+    SendChatMessage("Current gold: " .. math.floor((GetMoney()/10000)), 'GUILD')
+    SendChatMessage("Current zone: " .. getZone(), 'GUILD')
 end
 
 -- returns the current zone
