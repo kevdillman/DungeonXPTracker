@@ -122,7 +122,7 @@ def formatDate(rawDate):
     monthFromRaw = rawDate[3:5]
     dayFromRaw = rawDate[0:2]
 
-    formattedDate = yearFromRaw + monthFromRaw + dayFromRaw + rawDate[8:]
+    formattedDate = monthFromRaw + "/" + dayFromRaw + "/" + yearFromRaw + rawDate[8:]
 
     return formattedDate
 
@@ -141,6 +141,8 @@ def main():
 
     # output DataFrame as csv
     lvlingData.to_csv("./dungeon_runs/dungeonData.csv")
+
+    print("Parsing Complete")
 
 if __name__ == '__main__':
     main()
