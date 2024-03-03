@@ -32,11 +32,6 @@ local dungeonRun = {
 dungeonFrame:SetScript("OnEvent",
     function(self, event, ...)
 
-        -- initial world entry or /reload
-        --if (event == "PLAYER_ENTERING_WORLD") then
-        --    printCurrentStats()
-        --end
-
         -- initial entry to dungeon
         if (event == "PLAYER_ENTERING_WORLD" and IsInInstance() and not inDungeon) then
             print("In an instance group! :-D")
@@ -69,6 +64,7 @@ dungeonFrame:SetScript("OnEvent",
                 dungeonRun.charRole = UnitGroupRolesAssigned("player")
             end
             printZone()
+            print("Role: ", dungeonRun.charRole)
             areaCheck = true
         end
 
@@ -77,15 +73,13 @@ dungeonFrame:SetScript("OnEvent",
 
         function SlashCmdList.DUNGEONXPTRACKER(msg)
             -- output for default /xpt command and /xpt last
-            if (msg == "" or "last") then
+            if (msg == "" or msg == "last") then
                 printXPValues()
-                print("xpt")
             end
 
             -- command /xpt current
             if (msg == "current") then
                 printCurrentStats()
-                print("current")
             end
         end
 
@@ -93,19 +87,21 @@ dungeonFrame:SetScript("OnEvent",
         if (event == "ADDON_LOADED") then
             local addon = ...
             if addon == "DungeonXPTracker" then
+
                 printCurrentStats()
+
+                -- if no saved variable exists create one
                 if dungeonTracker == nil then
                     dungeonTracker = {
                         dungeons = {},
-                       parsed = false
+                        parsed = false
                     }
                 end
 
                 -- if saved variable file has been parsed clean it
                 if dungeonTracker.parsed == true then
                     dungeonTracker = {
-                        dungeons = {
-                        },
+                        dungeons = {},
                         parsed = false
                      }
                 end
@@ -117,10 +113,6 @@ dungeonFrame:SetScript("OnEvent",
 
 -- prints the current zone
 function printZone()
-    --local currentZone = WorldMapFrame:GetMapID()
-    --local bigMap = C_Map.GetMapInfo(currentZone)
-            --local zoneID = bigMap(C_Map.GetBestMapForUnit("player"))
-    --local mapName = bigMap.name
     print ("You're currently in: ", getZoneBestMap())
 end
 
@@ -135,15 +127,11 @@ function printCurrentStats()
     print("Current rest XP is:", GetXPExhaustion())
     print("Current max lvl XP is:", UnitXPMax("player"))
     print("Current gold: ", math.floor((GetMoney()/10000)))
-    --printZone()
+    printZone()
 end
 
 -- returns the current zone
 function getZone()
-    --local currentZone = WorldMapFrame:GetMapID()
-    --local bigMap = C_Map.GetMapInfo(currentZone)
-    --local zoneID = bigMap(C_Map.GetBestMapForUnit("player"))
-    --local mapName = bigMap.name
     return getZoneBestMap()
 end
 
@@ -168,21 +156,15 @@ function getZoneBestMap()
             print("C_Map.GetMapInfo(Map_unit(\"player\")) == nil")
         end
     end
-    --local Map_unit = C_Map.GetBestMapForUnit
-    --local zoneText, temp, temp1 = C_Map.GetMapInfo(Map_unit("player"))
 
-    --local currentZone = WorldMapFrame:GetMapID()
-    --local bigMap = C_Map.GetMapInfo(currentZone)
-    --local zoneID = C_Map.GetBestMapForUnit("player")
-    --local mapName = bigMap.name
     if gotMapInfo then
         return zoneText.name
     end
-    --print("The zoneText is: ", zoneText.name)
-    --print("The zoneText dump is: ", dump(zoneText))
+
     return zoneText
 end
 
+-- prints the contents of a table
 function dump(o)
     if type(o) == 'table' then
        local s = '{ '
@@ -253,6 +235,7 @@ function setEndXP()
     table.insert(dungeonTracker.dungeons, dungeonInstance)
 end
 
+-- sets dungeonRun to default values
 function flushTable()
     dungeonRun = {
         startTime = 0,
