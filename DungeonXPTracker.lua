@@ -169,11 +169,11 @@ function getZone()
 
     if gotMapInfo then
         gotMapInfo = false
-        if C_Map.GetMapInfo(Map_unit("player")) ~= nil then
+        if Map_unit("player") ~= nil then
             zoneText, temp, temp1 = C_Map.GetMapInfo(Map_unit("player"))
             gotMapInfo = true
         else
-            print("C_Map.GetMapInfo(Map_unit(\"player\")) == nil")
+            print("Map_unit(\"player\")) == nil")
         end
     end
 
