@@ -4,6 +4,7 @@
 
 import pandas as pd
 import numpy as np
+from datetime import date
 from pathlib import Path
 
 # given a string of data, start point, and begin/end delimeters
@@ -144,10 +145,10 @@ def getPaths(pathsDoc):
         accountEnd = pathsDoc.find(',', accountBegin)
         while accountEnd != -1:
             accountPathName = ""
-            accountDisplayName = ""
+            outputName = ""
 
             accountPathName = pathsDoc[accountBegin : accountEnd]
-            print("accountPathName: ", accountPathName)
+            print("Account Name: ", accountPathName)
 
             # check if display name for account
             if len(pathsDoc) >= (accountEnd + 1):
@@ -161,10 +162,13 @@ def getPaths(pathsDoc):
                             accountEnd = pathsDoc.find('\n', accountBegin)
                         else:
                             accountEnd = len(pathsDoc) - 1
-                    accountDisplayName = pathsDoc[accountBegin : accountEnd]
-                    print("found display name: ", accountDisplayName)
 
-            accounts.append([accountPathName,accountDisplayName])
+                    # add date to output file name
+                    outputName = pathsDoc[accountBegin : accountEnd]
+                    print("Custom File Name: ", outputName)
+                    outputName = date.today().strftime("%Y%m%d") + "_" + pathsDoc[accountBegin : accountEnd] + "_"
+
+            accounts.append([accountPathName,outputName])
 
             accountBegin = accountEnd + 2
             accountEnd = pathsDoc.find(',', accountBegin)
@@ -175,7 +179,8 @@ def getPaths(pathsDoc):
                 accountPathName = pathsDoc[accountBegin : pathsDoc.find('\n', accountBegin)]
             else:
                 accountPathName = pathsDoc[accountBegin : ]
-            print("accountPathName: ", accountPathName)
+
+            print("Account Name: ", accountPathName)
             accounts.append([accountPathName, ""])
 
     else:
@@ -184,8 +189,8 @@ def getPaths(pathsDoc):
     return accounts, savedVarsPath
 
 def main():
-    path = Path('./path.txt').read_text()
-    accounts, savedVarsPath = getPaths(path)
+    fileData = Path('./path.txt').read_text()
+    accounts, savedVarsPath = getPaths(fileData)
     accountCount = len(accounts)
 
     for i in range(0, accountCount):
@@ -208,6 +213,7 @@ def main():
 
         exportPath = "./dungeon_runs/" + accounts[i][accountDisplayName] + "dungeonData.csv"
         lvlingData.to_csv(exportPath)
+        print("exported:", accounts[i][accountDisplayName] + "dungeonData.csv")
 
     print("Parsing Complete")
 
