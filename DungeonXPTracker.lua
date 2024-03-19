@@ -1,5 +1,5 @@
 -- Tool to track xp earned during a LFD dungeon
--- v0.1 by Puggyberra and Mspriss
+-- v0.1 by Puggyberra and Squealz
 -- created 10 Feb 2024
 
 local dungeonFrame = CreateFrame("Frame")

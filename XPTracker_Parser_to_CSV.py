@@ -1,5 +1,6 @@
-# Parser to parse saved variable from XPTracker addon
+# Parser for saved variable file from DungeonXPTracker addon
 # to csv that can be used with excel
+# v0.1 by PuggyBerra and Squealz
 # 12 Feb 2024
 
 import pandas as pd

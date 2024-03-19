@@ -1,8 +1,8 @@
 ## Interface: 100205
 ## Version: 0.1
 ## Title: DungeonXPTracker
-## Notes: Tracks starting and ending XPTracker
-## Author: PuggyBerra
+## Notes: Tracks starting and ending XP from LFD dungeon
+## Author: PuggyBerra and Squealz
 ## SavedVariables: dungeonTracker
 
 DungeonXPTracker.lua
