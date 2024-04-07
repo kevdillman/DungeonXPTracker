@@ -147,6 +147,7 @@ def getPaths(pathsDoc):
         while accountEnd != -1:
             accountPathName = ""
             outputName = ""
+            outputBackupName = ""
 
             accountPathName = pathsDoc[accountBegin : accountEnd]
             print("Account Name: ", accountPathName)
@@ -164,12 +165,22 @@ def getPaths(pathsDoc):
                         else:
                             accountEnd = len(pathsDoc) - 1
 
-                    # add date to output file name
+                    # add custom name to output file name
                     outputName = pathsDoc[accountBegin : accountEnd]
+                    outputBackupName = pathsDoc[accountBegin : accountEnd]
                     print("Custom File Name: ", outputName)
-                    outputName = date.today().strftime("%Y%m%d") + "_" + pathsDoc[accountBegin : accountEnd] + "_"
+
+
+            # add second entry to accounts with date prefix
+            if outputName != "":
+                outputBackupName = date.today().strftime("%Y%m%d") + "_" + outputName
+            elif accountPathName != "":
+                outputBackupName = date.today().strftime("%Y%m%d") + "_" + accountPathName
+            else:
+                print("No accounts found")
 
             accounts.append([accountPathName,outputName])
+            accounts.append([accountPathName,outputBackupName])
 
             accountBegin = accountEnd + 2
             accountEnd = pathsDoc.find(',', accountBegin)
@@ -212,9 +223,10 @@ def main():
         if accounts[i][1] != "":
             accountDisplayName = 1
 
-        exportPath = "./dungeon_runs/" + accounts[i][accountDisplayName] + "dungeonData.csv"
+        exportPath = "./dungeon_runs/" + accounts[i][accountDisplayName] + "_dungeonData.csv"
         lvlingData.to_csv(exportPath)
-        print("exported:", accounts[i][accountDisplayName] + "dungeonData.csv")
+        exportPath = "./dungeon_runs/+"
+        print("exported:", accounts[i][accountDisplayName] + "_dungeonData.csv")
 
     print("Parsing Complete")
 
