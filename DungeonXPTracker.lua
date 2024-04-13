@@ -207,10 +207,12 @@ function createDungeonWindow()
         local buttonWidth = self.closeButton:GetWidth()
         width = math.max(width, titleWidth, buttonWidth)
         -- And adjust the width of the frame, accounting for the inner padding:
-        --self:SetWidth(width + 32)
+        self:SetWidth(width + 32)
     end
-
-    dungeonInfoWindow:SetText("Lets test dungeon stuff")
+    --dungeonInfoWindow:SetText("Lets test dungeon stuff")
+    displayText = ""
+    displayText = displayText .. "Last Dungeon run:\n" .. dungeonOutput(dungeonTracker.dungeons[#dungeonTracker.dungeons - 1])
+    dungeonInfoWindow.Text:SetText(displayText)
 
 end
 
@@ -290,6 +292,15 @@ function dump(o)
     else
        return tostring(o)
     end
+ end
+
+ function dungeonOutput(dungeonTable)
+    local builtString = ""
+    for key,value in pairs(dungeonTable) do
+        key = key
+        builtString = builtString .. key ..'   =   ' .. tostring(value) .. '\n'
+    end
+    return builtString
  end
 
 -- gets amount of rest XP or returns 0 if none
