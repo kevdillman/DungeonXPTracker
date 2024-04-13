@@ -2,12 +2,23 @@
 -- v0.1 by Puggyberra and Squealz
 -- created 10 Feb 2024
 
+-- setup the dungeonFrame
 local dungeonFrame = CreateFrame("Frame")
+    dungeonFrame:RegisterEvent("ADDON_LOADED")
+    dungeonFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    dungeonFrame:RegisterEvent("GROUP_LEFT")
+    dungeonFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
 
-dungeonFrame:RegisterEvent("ADDON_LOADED")
-dungeonFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-dungeonFrame:RegisterEvent("GROUP_LEFT")
-dungeonFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+-- setup the window style
+local backdropInfo = {
+    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
+    edgeFile = "Interface\\AddOns\\Details\\images\\border_3",
+    tile=true,
+    tileEdge = true,
+    tileSize = 8,
+    edgeSize = 16,
+    insets = {left = 3, right = 3, top = 4, bottom = 4}
+}
 
 local inDungeon = false
 local areaCheck = false
@@ -90,6 +101,22 @@ dungeonFrame:SetScript("OnEvent",
                 -- SendChatMessage("guild test",'GUILD')
                 printCurrentStatsGuild()
             end
+
+            -- command /xpt window
+            -- display window with information about dungeon runs
+            if (msg == "window") then
+                print("xpt window creates a window")
+                -- local dungeonWindow = CreateFrame("Frame", "dungeonInfoWindow", UIParent)
+                createDungeonWindow()
+                --dungeonInfoWindow:Show()
+            end
+
+            -- closes all open windows
+            if (msg == "close") then
+                if dungeonInfoWindow then
+                    dungeonInfoWindow:Hide()
+                end
+            end
         end
 
         -- on addon load checks saved variable
@@ -119,6 +146,45 @@ dungeonFrame:SetScript("OnEvent",
         end
     end
 )
+
+-- create the dungeonInfoWindow
+function createDungeonWindow()
+    local dungeonInfoWindow = CreateFrame("Frame", "dungeonInfoWindow", UIParent, "BackdropTemplate")
+    -- location and size
+    dungeonInfoWindow:SetPoint("BOTTOM", UIParent, "CENTER", 0, 0)
+    dungeonInfoWindow:SetSize(500, 200)
+
+    -- background
+    dungeonInfoWindow:SetBackdrop(backdropInfo)
+    dungeonInfoWindow:SetAlpha(.8)
+
+    -- title:
+    local dungeonInfoWindowTitle = dungeonInfoWindow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    dungeonInfoWindowTitle:SetPoint("TOP", 0, -4)
+    dungeonInfoWindowTitle:SetText("My Test Window")
+    -- make the title easy to access:
+    dungeonInfoWindow.Title = dungeonInfoWindowTitle
+
+    -- make window movable
+    dungeonInfoWindow:SetMovable(true)
+    dungeonInfoWindow:EnableMouse(true)
+    dungeonInfoWindow:RegisterForDrag("LeftButton")
+    dungeonInfoWindow:SetScript("OnDragStart", dungeonInfoWindow.StartMoving)
+    dungeonInfoWindow:SetScript("OnDragStop", dungeonInfoWindow.StopMovingOrSizing)
+
+    -- create close button
+    local closeButton = CreateFrame("Button", "$parentCloseButton", dungeonInfoWindow, "UIPanelButtonTemplate")
+    closeButton:SetSize(21,21)
+    closeButton:SetText("X")
+    closeButton:SetPoint("TOPRIGHT", -2, -2)
+    closeButton:SetAlpha(.8)
+    closeButton:SetScript("OnClick",
+        function(self)
+            self:GetParent():Hide()
+        end
+    )
+
+end
 
 -- prints the current zone
 function printZone()
