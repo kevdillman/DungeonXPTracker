@@ -151,19 +151,12 @@ dungeonFrame:SetScript("OnEvent",
 function createDungeonWindow()
     local dungeonInfoWindow = CreateFrame("Frame", "dungeonInfoWindow", UIParent, "BackdropTemplate")
     -- location and size
-    dungeonInfoWindow:SetPoint("BOTTOM", UIParent, "CENTER", 0, 0)
-    dungeonInfoWindow:SetSize(500, 200)
+    dungeonInfoWindow:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    dungeonInfoWindow:SetSize(700, 500)
 
     -- background
     dungeonInfoWindow:SetBackdrop(backdropInfo)
     dungeonInfoWindow:SetAlpha(.8)
-
-    -- title:
-    local dungeonInfoWindowTitle = dungeonInfoWindow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    dungeonInfoWindowTitle:SetPoint("TOP", 0, -4)
-    dungeonInfoWindowTitle:SetText("My Test Window")
-    -- make the title easy to access:
-    dungeonInfoWindow.Title = dungeonInfoWindowTitle
 
     -- make window movable
     dungeonInfoWindow:SetMovable(true)
@@ -171,6 +164,13 @@ function createDungeonWindow()
     dungeonInfoWindow:RegisterForDrag("LeftButton")
     dungeonInfoWindow:SetScript("OnDragStart", dungeonInfoWindow.StartMoving)
     dungeonInfoWindow:SetScript("OnDragStop", dungeonInfoWindow.StopMovingOrSizing)
+
+    -- title:
+    local dungeonInfoWindowTitle = dungeonInfoWindow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    dungeonInfoWindowTitle:SetPoint("TOP", 0, -4)
+    dungeonInfoWindowTitle:SetText("My Test Window")
+    -- make the title easy to access:
+    dungeonInfoWindow.Title = dungeonInfoWindowTitle
 
     -- create close button
     local closeButton = CreateFrame("Button", "$parentCloseButton", dungeonInfoWindow, "UIPanelButtonTemplate")
@@ -183,6 +183,34 @@ function createDungeonWindow()
             self:GetParent():Hide()
         end
     )
+    dungeonInfoWindow.closeButton = closeButton
+
+    -- Add a font string in the middle:
+    local dungeonInfoWindowText = dungeonInfoWindow:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    dungeonInfoWindowText:SetPoint("LEFT", 40, 0)
+    dungeonInfoWindowText:SetPoint("RIGHT", -40, 0)
+    dungeonInfoWindowText:SetPoint("TOP", dungeonInfoWindowTitle, "BOTTOM", 0, -16)
+    dungeonInfoWindowText:SetPoint("BOTTOM", 0, 16)
+    dungeonInfoWindowText:SetJustifyH("Left")
+    dungeonInfoWindowText:SetJustifyV("TOP")
+    dungeonInfoWindow.Text = dungeonInfoWindowText
+
+    -- Frames don't normally have a SetText method, but we'll add one that sets the
+    -- text of the frame's font string, and adjusts the size of the frame to match.
+    function dungeonInfoWindow:SetText(text)
+        -- Set the text of the font string:
+        self.Text:SetText(text)
+        -- Find out how long the text is:
+        local width = self.Text:GetStringWidth()
+        -- Make sure it's at least as wide as the title and button:
+        local titleWidth = self.Title:GetWidth()
+        local buttonWidth = self.closeButton:GetWidth()
+        width = math.max(width, titleWidth, buttonWidth)
+        -- And adjust the width of the frame, accounting for the inner padding:
+        --self:SetWidth(width + 32)
+    end
+
+    dungeonInfoWindow:SetText("Lets test dungeon stuff")
 
 end
 
