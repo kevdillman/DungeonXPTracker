@@ -186,14 +186,7 @@ function createDungeonWindow()
     dungeonInfoWindow.closeButton = closeButton
 
     -- Add a font string in the middle:
-    local dungeonInfoWindowText = dungeonInfoWindow:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    dungeonInfoWindowText:SetPoint("LEFT", 40, 0)
-    dungeonInfoWindowText:SetPoint("RIGHT", -40, 0)
-    dungeonInfoWindowText:SetPoint("TOP", dungeonInfoWindowTitle, "BOTTOM", 0, -16)
-    dungeonInfoWindowText:SetPoint("BOTTOM", 0, 16)
-    dungeonInfoWindowText:SetJustifyH("Left")
-    dungeonInfoWindowText:SetJustifyV("TOP")
-    dungeonInfoWindow.Text = dungeonInfoWindowText
+    dungeonInfoWindow.Text = setWindowTextFormat(dungeonInfoWindow)
 
     -- Frames don't normally have a SetText method, but we'll add one that sets the
     -- text of the frame's font string, and adjusts the size of the frame to match.
@@ -209,11 +202,30 @@ function createDungeonWindow()
         -- And adjust the width of the frame, accounting for the inner padding:
         self:SetWidth(width + 32)
     end
-    --dungeonInfoWindow:SetText("Lets test dungeon stuff")
+
+    -- add information of the last dungeon run
+    setWindowText(dungeonInfoWindow)
+
+end
+
+-- sets the text format for a window
+function setWindowTextFormat(window)
+    local windowText = window:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    windowText:SetPoint("LEFT", 40, 0)
+    windowText:SetPoint("RIGHT", -40, 0)
+    windowText:SetPoint("TOP", window.Title, "BOTTOM", 0, -16)
+    windowText:SetPoint("BOTTOM", 0, 16)
+    windowText:SetJustifyH("Left")
+    windowText:SetJustifyV("TOP")
+
+    return windowText
+end
+
+-- sets the text string of a window
+function setWindowText(window, text)
     displayText = ""
     displayText = displayText .. "Last Dungeon run:\n" .. dungeonOutput(dungeonTracker.dungeons[#dungeonTracker.dungeons - 1])
-    dungeonInfoWindow.Text:SetText(displayText)
-
+    window.Text:SetText(displayText)
 end
 
 -- prints the current zone
