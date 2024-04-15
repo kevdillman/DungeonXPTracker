@@ -168,7 +168,7 @@ function createDungeonWindow()
     -- title:
     local dungeonInfoWindowTitle = dungeonInfoWindow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     dungeonInfoWindowTitle:SetPoint("TOP", 0, -4)
-    dungeonInfoWindowTitle:SetText("My Test Window")
+    dungeonInfoWindowTitle:SetText("Dungeon Info")
     -- make the title easy to access:
     dungeonInfoWindow.Title = dungeonInfoWindowTitle
 
