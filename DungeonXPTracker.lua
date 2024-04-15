@@ -174,16 +174,16 @@ function createDungeonWindow()
 
     -- create close button
     local closeButton = CreateFrame("Button", "$parentCloseButton", dungeonInfoWindow, "UIPanelButtonTemplate")
-    closeButton:SetSize(21,21)
-    closeButton:SetText("X")
-    closeButton:SetPoint("TOPRIGHT", -2, -2)
-    closeButton:SetAlpha(.8)
-    closeButton:SetScript("OnClick",
-        function(self)
-            self:GetParent():Hide()
-        end
-    )
-    dungeonInfoWindow.closeButton = closeButton
+        closeButton:SetSize(21,21)
+        closeButton:SetText("X")
+        closeButton:SetPoint("TOPRIGHT", -2, -2)
+        closeButton:SetAlpha(.8)
+        closeButton:SetScript("OnClick",
+            function(self)
+                self:GetParent():Hide()
+            end
+        )
+        dungeonInfoWindow.closeButton = closeButton
 
     -- Add a font string in the middle:
     dungeonInfoWindow.Text = setWindowTextFormat(dungeonInfoWindow)
@@ -306,13 +306,31 @@ function dump(o)
     end
  end
 
+ -- return a pretty string of the information in the dungeon table
  function dungeonOutput(dungeonTable)
-    local builtString = ""
+    local prettyString = ""
     for key,value in pairs(dungeonTable) do
         key = key
-        builtString = builtString .. key ..'   =   ' .. tostring(value) .. '\n'
+        prettyString = prettyString .. key ..'   =   ' .. tostring(value) .. '\n'
     end
-    return builtString
+    prettyString =
+        "Name: " .. dungeonTable.charName .. "\n" ..
+        "Race: " .. dungeonTable.charRace .. "\n" ..
+        -- need to add class gather "Class: " .. dungeonTable.charClass
+        "Dungeon: " .. dungeonTable.dungeon .. "\n" ..
+        "Role: " .. dungeonTable.charRole .. "\n" ..
+        "Start level: " .. dungeonTable.startLVL .. "\n" ..
+        "Start XP: " .. dungeonTable.startXP .. "\n" ..
+        "End level: " .. dungeonTable.endingLVL .. "\n" ..
+        "End XP: " .. dungeonTable.endingXP .. "\n" ..
+        "Start rest: " .. dungeonTable.startRest .. "\n" ..
+        "End rest: " .. dungeonTable.endingRest .. "\n" ..
+        "Start gold: " .. dungeonTable.startMoney .. "\n" ..
+        "End gold: " .. dungeonTable.endingMoney .. "\n" ..
+        "Start time: " .. dungeonTable.startTime .. "\n" ..
+        "End time: " .. dungeonTable.endingTime
+
+    return prettyString
  end
 
 -- gets amount of rest XP or returns 0 if none
