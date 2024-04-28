@@ -31,7 +31,7 @@ class Person(Base):
 
     def __repr__(self) -> str:
         return f"Person(pID={self.pID!r}, pextID={self.pextID!r}, firstNAME={self.firstNAME!r}, middleNAME={self.firstNAME!r}, lastNAME{self.lastNAME!r}, email={self.email!r}, pcreationDT={self.pcreationDT!r}"
-    
+
 class Account(Base):
     __tablename__ = "account"
 
