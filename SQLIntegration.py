@@ -21,6 +21,7 @@ dbName = "dungeonxptrackerdb"
 connectionString = f'DRIVER={{ODBC Driver 18 for SQL Server}};ADDRESS={hostNamePort};UID={userName};PWD={password};DATABASE={dbName};TrustServerCertificate=YES'
 conn = pyodbc.connect(connectionString)
 
+
 # storing sql query
 SQL_QUERY = """
 SELECT *
