@@ -2,12 +2,23 @@
 -- v0.1 by Puggyberra and Squealz
 -- created 10 Feb 2024
 
+-- setup the dungeonFrame
 local dungeonFrame = CreateFrame("Frame")
+    dungeonFrame:RegisterEvent("ADDON_LOADED")
+    dungeonFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    dungeonFrame:RegisterEvent("GROUP_LEFT")
+    dungeonFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
 
-dungeonFrame:RegisterEvent("ADDON_LOADED")
-dungeonFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-dungeonFrame:RegisterEvent("GROUP_LEFT")
-dungeonFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+-- setup the window style
+local backdropInfo = {
+    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
+    edgeFile = "Interface\\AddOns\\Details\\images\\border_3",
+    tile=true,
+    tileEdge = true,
+    tileSize = 8,
+    edgeSize = 16,
+    insets = {left = 3, right = 3, top = 4, bottom = 4}
+}
 
 local inDungeon = false
 local areaCheck = false
@@ -90,6 +101,44 @@ dungeonFrame:SetScript("OnEvent",
                 -- SendChatMessage("guild test",'GUILD')
                 printCurrentStatsGuild()
             end
+
+            -- command /xpt window
+            -- display window with information about dungeon runs
+            if (msg == "window") then
+                print("xpt window creates a window")
+                if dungeonInfoWindow == nil then
+                    createDungeonWindow()
+                end
+                dungeonInfoWindow:Show()
+            end
+
+            -- command /xpt demo
+            -- displays the dungeon info window and the raw data windows
+            if (msg == "demo") then
+                print("xpt window demo")
+                if dungeonInfoWindow == nil then
+                    createDungeonWindow()
+                end
+                dungeonInfoWindow:Show()
+                if dungeonInfoWindowRaw == nil then
+                    createRawDungeonWindow()
+                end
+                dungeonInfoWindowRaw:Show()
+            end
+
+            -- command /xpt close
+            -- closes all open windows
+            if (msg == "close") then
+                -- close the info window
+                if dungeonInfoWindow then
+                    dungeonInfoWindow:Hide()
+                end
+
+                -- close the raw data window
+                if dungeonInfoWindowRaw then
+                    dungeonInfoWindowRaw:Hide()
+                end
+            end
         end
 
         -- on addon load checks saved variable
@@ -119,6 +168,183 @@ dungeonFrame:SetScript("OnEvent",
         end
     end
 )
+
+-- create the dungeonInfoWindow
+function createRawDungeonWindow()
+    local dungeonInfoWindowRaw = CreateFrame("Frame", "dungeonInfoWindowRaw", UIParent, "BackdropTemplate")
+    -- location and size
+    dungeonInfoWindowRaw:SetPoint("CENTER", UIParent, "CENTER", 250, 0)
+    dungeonInfoWindowRaw:SetSize(230, 270)
+
+    -- background
+    dungeonInfoWindowRaw:SetBackdrop(backdropInfo)
+    dungeonInfoWindowRaw:SetAlpha(.8)
+
+    -- make window movable
+    dungeonInfoWindowRaw:SetMovable(true)
+    dungeonInfoWindowRaw:EnableMouse(true)
+    dungeonInfoWindowRaw:RegisterForDrag("LeftButton")
+    dungeonInfoWindowRaw:SetScript("OnDragStart", dungeonInfoWindowRaw.StartMoving)
+    dungeonInfoWindowRaw:SetScript("OnDragStop", dungeonInfoWindowRaw.StopMovingOrSizing)
+
+    -- title:
+    local dungeonInfoWindowTitle = dungeonInfoWindowRaw:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    dungeonInfoWindowTitle:SetPoint("TOP", 0, -4)
+    dungeonInfoWindowTitle:SetText("Dungeon XP Raw Data")
+    -- make the title easy to access:
+    dungeonInfoWindowRaw.Title = dungeonInfoWindowTitle
+
+    -- create close button
+    local closeButton = CreateFrame("Button", "$parentCloseButton", dungeonInfoWindowRaw, "UIPanelButtonTemplate")
+        closeButton:SetSize(21,21)
+        closeButton:SetText("X")
+        closeButton:SetPoint("TOPRIGHT", -2, -2)
+        closeButton:SetAlpha(.8)
+        closeButton:SetScript("OnClick",
+            function(self)
+                self:GetParent():Hide()
+            end
+        )
+        dungeonInfoWindowRaw.closeButton = closeButton
+
+    -- create button to view more information about specific dungeon
+    local infoButton = CreateFrame("Button", "$parentCloseButton", dungeonInfoWindowRaw, "UIPanelButtonTemplate")
+        infoButton:SetSize(120,25)
+        infoButton:SetText("Clear Text")
+        infoButton:SetPoint("BOTTOM", 0, 10)
+        infoButton:SetAlpha(.9)
+        infoButton:SetScript("OnClick",
+            function(self)
+                dungeonInfoWindowRaw.Text:Hide()
+            end
+        )
+        dungeonInfoWindowRaw.infoButton = infoButton
+
+    -- Frames don't normally have a SetText method, but we'll add one that sets the
+    -- text of the frame's font string, and adjusts the size of the frame to match.
+    function dungeonInfoWindowRaw:SetText(text)
+        -- Set the text of the font string:
+        self.Text:SetText(text)
+        -- Find out how long the text is:
+        local width = self.Text:GetStringWidth()
+        -- Make sure it's at least as wide as the title and button:
+        local titleWidth = self.Title:GetWidth()
+        local buttonWidth = self.closeButton:GetWidth()
+        width = math.max(width, titleWidth, buttonWidth)
+        -- And adjust the width of the frame, accounting for the inner padding:
+        self:SetWidth(width + 32)
+    end
+
+    -- Add a font string in the middle:
+    dungeonInfoWindowRaw.Text = setWindowTextFormat(dungeonInfoWindowRaw)
+
+
+    -- add information of the last dungeon run
+    setWindowTextRaw(dungeonInfoWindowRaw)
+
+end
+
+-- create raw data window
+function createDungeonWindow()
+    local dungeonInfoWindow = CreateFrame("Frame", "dungeonInfoWindow", UIParent, "BackdropTemplate")
+    -- location and size
+    dungeonInfoWindow:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    dungeonInfoWindow:SetSize(230, 270)
+
+    -- background
+    dungeonInfoWindow:SetBackdrop(backdropInfo)
+    dungeonInfoWindow:SetAlpha(.8)
+
+    -- make window movable
+    dungeonInfoWindow:SetMovable(true)
+    dungeonInfoWindow:EnableMouse(true)
+    dungeonInfoWindow:RegisterForDrag("LeftButton")
+    dungeonInfoWindow:SetScript("OnDragStart", dungeonInfoWindow.StartMoving)
+    dungeonInfoWindow:SetScript("OnDragStop", dungeonInfoWindow.StopMovingOrSizing)
+
+    -- title:
+    local dungeonInfoWindowTitle = dungeonInfoWindow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    dungeonInfoWindowTitle:SetPoint("TOP", 0, -4)
+    dungeonInfoWindowTitle:SetText("Dungeon XP Tracker")
+    -- make the title easy to access:
+    dungeonInfoWindow.Title = dungeonInfoWindowTitle
+
+    -- create close button
+    local closeButton = CreateFrame("Button", "$parentCloseButton", dungeonInfoWindow, "UIPanelButtonTemplate")
+        closeButton:SetSize(21,21)
+        closeButton:SetText("X")
+        closeButton:SetPoint("TOPRIGHT", -2, -2)
+        closeButton:SetAlpha(.8)
+        closeButton:SetScript("OnClick",
+            function(self)
+                self:GetParent():Hide()
+            end
+        )
+        dungeonInfoWindow.closeButton = closeButton
+
+    -- create button to view more information about specific dungeon
+    local infoButton = CreateFrame("Button", "$parentCloseButton", dungeonInfoWindow, "UIPanelButtonTemplate")
+        infoButton:SetSize(120,25)
+        infoButton:SetText("Clear Text")
+        infoButton:SetPoint("BOTTOM", 0, 10)
+        infoButton:SetAlpha(.9)
+        infoButton:SetScript("OnClick",
+            function(self)
+                dungeonInfoWindow.Text:Hide()
+            end
+        )
+        dungeonInfoWindow.infoButton = infoButton
+
+    -- Add a font string in the middle:
+    dungeonInfoWindow.Text = setWindowTextFormat(dungeonInfoWindow)
+
+    -- Frames don't normally have a SetText method, but we'll add one that sets the
+    -- text of the frame's font string, and adjusts the size of the frame to match.
+    function dungeonInfoWindow:SetText(text)
+        -- Set the text of the font string:
+        self.Text:SetText(text)
+        -- Find out how long the text is:
+        local width = self.Text:GetStringWidth()
+        -- Make sure it's at least as wide as the title and button:
+        local titleWidth = self.Title:GetWidth()
+        local buttonWidth = self.closeButton:GetWidth()
+        width = math.max(width, titleWidth, buttonWidth)
+        -- And adjust the width of the frame, accounting for the inner padding:
+        self:SetWidth(width + 32)
+    end
+
+    -- add information of the last dungeon run
+    setWindowText(dungeonInfoWindow)
+
+end
+
+
+-- sets the text format for a window
+function setWindowTextFormat(window)
+    local windowText = window:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    windowText:SetPoint("LEFT", 15, 0)
+    windowText:SetPoint("RIGHT", -5, 0)
+    windowText:SetPoint("TOP", window.Title, "BOTTOM", 0, -16)
+    windowText:SetPoint("BOTTOM", 0, 16)
+    windowText:SetJustifyH("Left")
+    windowText:SetJustifyV("TOP")
+
+    return windowText
+end
+
+-- sets the text string of a window
+function setWindowText(window, text)
+    displayText = ""
+    displayText = displayText .. "Last Dungeon run:\n" .. dungeonOutput(dungeonTracker.dungeons[#dungeonTracker.dungeons - 1])
+    window.Text:SetText(displayText)
+end
+
+-- sets the text string of a window
+function setWindowTextRaw(window, text)
+    displayText = ""
+    displayText = displayText .. "Last Dungeon run:\n" .. dungeonOutputRaw(dungeonTracker.dungeons[#dungeonTracker.dungeons - 1])
+    window.Text:SetText(displayText)
+end
 
 -- prints the current zone
 function printZone()
@@ -196,6 +422,45 @@ function dump(o)
     else
        return tostring(o)
     end
+ end
+
+-- raw dungeon variable outputs
+function dungeonOutputRaw(dungeonTable)
+    local rawString = ""
+    for key,value in pairs(dungeonTable) do
+        key = key
+        rawString = rawString .. key ..': ' .. tostring(value) .. '\n'
+    end
+
+    return rawString
+end
+
+-- return a pretty string of the information in the dungeon table
+function dungeonOutput(dungeonTable)
+    local prettyString = ""
+    for key,value in pairs(dungeonTable) do
+        key = key
+        prettyString = prettyString .. key ..'   =   ' .. tostring(value) .. '\n'
+    end
+    prettyString =
+        "Name: " .. dungeonTable.charName .. "\n" ..
+        "Race: " .. dungeonTable.charRace .. "\n" ..
+        -- need to add class gather "Class: " .. dungeonTable.charClass
+        "Dungeon: " .. dungeonTable.dungeon .. "\n" ..
+        "Role: " .. dungeonTable.charRole .. "\n" ..
+        "Start level: " .. dungeonTable.startLVL .. "\n" ..
+        "Start XP: " .. dungeonTable.startXP .. "\n" ..
+        "End level: " .. dungeonTable.endingLVL .. "\n" ..
+        "End XP: " .. dungeonTable.endingXP .. "\n" ..
+        "Start rest: " .. dungeonTable.startRest .. "\n" ..
+        "End rest: " .. dungeonTable.endingRest .. "\n" ..
+        "Start gold: " .. dungeonTable.startMoney .. "\n" ..
+        "End gold: " .. dungeonTable.endingMoney .. "\n" ..
+        "Gold gained: " .. dungeonTable.endingMoney - dungeonTable.startMoney .. "\n" ..
+        "Start time: " .. dungeonTable.startTime .. "\n" ..
+        "End time: " .. dungeonTable.endingTime
+
+    return prettyString
  end
 
 -- gets amount of rest XP or returns 0 if none
