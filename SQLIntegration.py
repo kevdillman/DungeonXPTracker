@@ -42,7 +42,7 @@ FROM INFORMATION_SCHEMA.COLUMNS
 print("Select specific user\n")
 
 session = Session(engine)
-
-SQL_QUERY = select(Person).where(Person.pextID.in_(["DEATHKRON"]))
+accounts = ["DEATHKRON"]
+SQL_QUERY = select(Person).where(Person.pextID.in_(accounts))
 for person in session.scalars(SQL_QUERY):
     print(person)
