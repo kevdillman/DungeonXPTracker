@@ -18,8 +18,50 @@ dbName = "dungeonxptrackerdb"
 #print(pyodbc.drivers())
 
 # create engine and connect to database
-engine = create_engine("mssql+pyodbc://" + userName +":" + password +"@" + hostNamePort + "/" + dbName + "?driver=ODBC+Driver+17+for+SQL+Server", echo=True)
+engine = create_engine("mssql+pyodbc://" + userName +":" + password +"@" + hostNamePort + "/" + dbName + "?driver=ODBC+Driver+17+for+SQL+Server", echo=False)
 engine.connect()
+session = Session(engine)
+
+def addCharacters(account, parsedData):
+    uniqueCharNames = []
+    character = {
+        'name': "",
+        'realm': "Zul'jin",
+        'faction': "Horde",
+        'race': "",
+        'guild': "The Fire Heals You"
+    }
+
+    for i in range(len(parsedData)):
+        if parsedData['charName'].iloc[i] not in uniqueCharNames:
+            character['name'] = parsedData['charName'].iloc[i]
+            character['race'] = parsedData['charRace'].iloc[i]
+            uniqueCharNames.append(character)
+
+    charsInDatabase = []
+    for char in session.scalars(select(Character)):
+        charsInDatabase.append(char.cNAME)
+
+    if uniqueCharNames[0]['name'] not in charsInDatabase:
+        newChar = Character(
+            cNAME = uniqueCharNames[0]['name'],
+            cREALM = uniqueCharNames[0]['realm'],
+            cFACTION = uniqueCharNames[0]['faction'],
+            cRACE = uniqueCharNames[0]['race'],
+            cGUILD = uniqueCharNames[0]['guild']
+        )
+
+        user = session.scalars(select(Account).where(Account.wowACCOUNT == "DEATHKRON")).one()
+        user.characters.append(newChar)
+        session.commit()
+
+    charsInDatabase = []
+    for char in session.scalars(select(Character)):
+        charsInDatabase.append(char.cNAME)
+
+    print("unique char names: ",uniqueCharNames[0])
+    print("Chars in database:", charsInDatabase)
+
 
 
 # creates tables from models file in database
@@ -38,6 +80,48 @@ FROM INFORMATION_SCHEMA.COLUMNS
 #cursor = conn.cursor()
 #cursor.execute(SQL_QUERY)
 
+kevinCharacter = Character(
+        cNAME = "Lilmortade",
+        cREALM = "Zul'jin",
+        cFACTION = "Horde",
+        cRACE = "Goblin",
+        cGUILD = "The Fire Heals You"
+)
+
+kevinAccounts = [
+    Account(
+        wowACCOUNT = "DEATHKRON",
+        bnetNAME = "DEATHKRON"
+    )
+]
+
+kevin = Person(
+    firstNAME = "Kevin",
+    lastNAME = "Dillman",
+    email = "kevdillman@gmail.com",
+    accounts = kevinAccounts
+)
+
+writeData = False
+if writeData:
+    # adds a Person and their account
+    with Session(engine) as session:
+        session.add(kevinCharacter)
+        session.commit()
+
+    # adds a character to an account
+    user = session.scalars(select(Account).where(Account.wowACCOUNT == "DEATHKRON")).one()
+    user.characters.append(kevinCharacter)
+    session.commit()
+
+
+#user = session.scalars(SQL_QUERY).one()
+#print(user)
+#select(Person).where(Account.wowACCOUNT == "DEATHKRON")
+#for person in session.scalars(select(Character)):
+    #print(person)
+
+
 """ with engine.connect() as connection:
     records = connection.execute(text(SQL_QUERY))
     for r in records:
@@ -55,19 +139,3 @@ print("current middle name: ", user.middleNAME)
 user.middleNAME = "C"
 print("update name:", user.middleNAME)
 session.commit() """
-
-
-""" with Session(engine) as session:
-    testPerson = Person(
-        pextID = "Puggyberra",
-        firstNAME = "test",
-        lastNAME = "ing",
-        email = "test@testing.com"
-    )
-    session.add(testPerson)
-    session.commit()
-
-user = session.scalars(SQL_QUERY).one()
-print(user)
-for person in session.scalars(select(Person)):
-    print(person) """

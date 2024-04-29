@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 from datetime import date
 from pathlib import Path
+from SQLIntegration import addCharacters
 
 # given a string of data, start point, and begin/end delimeters
 # returns values between delimeters and delimeter locations
@@ -227,6 +228,10 @@ def main():
         lvlingData.to_csv(exportPath)
         exportPath = "./dungeon_runs/+"
         print("exported:", accounts[i][accountDisplayName] + "_dungeonData.csv")
+
+        # add data to SQL Database
+        if accounts[i][accountDisplayName] == "DEATHKRON":
+            addCharacters(accounts[i][accountDisplayName], lvlingData)
 
     print("Parsing Complete")
 

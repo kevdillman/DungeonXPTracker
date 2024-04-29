@@ -31,7 +31,11 @@ class Person(Base):
     accounts: Mapped[List["Account"]] = relationship()
 
     def __repr__(self) -> str:
-        return f"Person(pID={self.pID!r}, firstNAME={self.firstNAME!r}, middleNAME={self.middleNAME!r}, lastNAME{self.lastNAME!r}, email={self.email!r}, pcreationDT={self.pcreationDT!r})"
+        response = f"Person(pID={self.pID!r}, firstNAME={self.firstNAME!r}, middleNAME={self.middleNAME!r}, lastNAME{self.lastNAME!r}, email={self.email!r}, accounts=["
+        for i in range(len(self.accounts)):
+            response += f"\n\t{self.accounts[i]!r}"
+        response += f"]"
+        return response
 
 class Account(Base):
     __tablename__ = "account"
@@ -45,7 +49,8 @@ class Account(Base):
     characters: Mapped[List["Character"]] = relationship()
 
     def __repr__(self) -> str:
-        return f"Account(aID={self.aID!r}, wowACCOUNT={self.wowACCOUNT!r}, bnetNAME={self.bnetNAME!r}, personID={self.personID!r}, person={self.person!r}, characters={self.characters!r})"
+        #return f"Account(aID={self.aID!r}, wowACCOUNT={self.wowACCOUNT!r}, bnetNAME={self.bnetNAME!r}, personID={self.personID!r}, person={self.person!r}, characters={self.characters!r})"
+        return f"Account(aID={self.aID!r}, wowACCOUNT={self.wowACCOUNT!r}, bnetNAME={self.bnetNAME!r})"
 
 class Character(Base):
     __tablename__ = "character"
@@ -65,7 +70,7 @@ class Character(Base):
     levelhistory: Mapped[List["CharacterLevelHistory"]] = relationship()
 
     def __repr__(self) -> str:
-        return f"Character(cNAME={self.cNAME!r}, cREALM={self.cREALM!r}, cFACTION={self.cFACTION!r}, cRACE={self.cRACE!r}, cGUILD={self.cGUILD!r}, accountID={self.accountID}, cID={self.cID!r}, account={self.account!r})"
+        return f"Character(cID={self.cID!r}cNAME={self.cNAME!r}, cREALM={self.cREALM!r}, cFACTION={self.cFACTION!r}, cRACE={self.cRACE!r}, cGUILD={self.cGUILD!r}, accountID={self.accountID}, cID={self.cID!r}, account={self.account!r})"
 
 class Dungeon(Base):
     __tablename__ = "dungeon"
