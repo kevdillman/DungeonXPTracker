@@ -5,7 +5,7 @@ from sqlalchemy import create_engine, select
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 import pyodbc
-from models import Person
+from models import Base, Person, Account, Character, Dungeon, DungeonRun, LevelReference, CharacterLevelHistory
 
 # load the database connection into the engine
 userName = "pyClient"
@@ -18,8 +18,12 @@ dbName = "dungeonxptrackerdb"
 #print(pyodbc.drivers())
 
 # create engine and connect to database
-engine = create_engine("mssql+pyodbc://" + userName +":" + password +"@" + hostNamePort + "/" + dbName + "?driver=ODBC+Driver+17+for+SQL+Server")
+engine = create_engine("mssql+pyodbc://" + userName +":" + password +"@" + hostNamePort + "/" + dbName + "?driver=ODBC+Driver+17+for+SQL+Server", echo=True)
 engine.connect()
+
+
+# creates tables from models file in database
+#Base.metadata.create_all(engine)
 
 # creates connection to pyodbc database
 #connectionString = f'DRIVER={{ODBC Driver 18 for SQL Server}};ADDRESS={hostNamePort};UID={userName};PWD={password};DATABASE={dbName};TrustServerCertificate=YES'
@@ -39,11 +43,11 @@ FROM INFORMATION_SCHEMA.COLUMNS
     for r in records:
         print(r) """
 
-print("Select specific user\n")
+#print("Select specific user\n")
 
-session = Session(engine)
-accounts = ["DEATHKRON"]
-""" 
+#session = Session(engine)
+#accounts = ["DEATHKRON"]
+"""
 SQL_QUERY = select(Person).where(Person.pextID == "DEATHKRON")
 user = session.scalars(SQL_QUERY).one()
 print("user:", user)
@@ -62,9 +66,8 @@ session.commit() """
     )
     session.add(testPerson)
     session.commit()
- """
-""" user = session.scalars(SQL_QUERY).one()
-print(user) """
+
+user = session.scalars(SQL_QUERY).one()
+print(user)
 for person in session.scalars(select(Person)):
-    print(person)
- 
+    print(person) """

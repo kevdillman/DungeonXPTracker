@@ -24,8 +24,8 @@ class Person(Base):
     firstNAME: Mapped[str]
     middleNAME: Mapped[Optional[str]]
     lastNAME: Mapped[str]
-    email: Mapped[str] = mapped_column(unique=True)
-    pcreationDT: Mapped[datetime.datetime] = mapped_column(server_default = func.CURRENT_TIMESTAMP())
+    email: Mapped[str] #= mapped_column(unique=True)
+    #pcreationDT: Mapped[datetime.datetime] = mapped_column(server_default = func.CURRENT_TIMESTAMP())
     #lastmodDT: Mapped[datetime.datetime] = mapped_column
 
     accounts: Mapped[List["Account"]] = relationship()
@@ -51,7 +51,7 @@ class Character(Base):
     __tablename__ = "character"
 
     cID: Mapped[int] = mapped_column(primary_key=True)
-    cRV: Mapped[datetime.datetime] = mapped_column(server_default = func.CURRENT_TIMESTAMP())
+    #cRV: Mapped[datetime.datetime] = mapped_column(server_default = func.CURRENT_TIMESTAMP())
     cextID: Mapped[Optional[str]]
     cNAME: Mapped[str]
     cREALM: Mapped[str]
@@ -66,7 +66,6 @@ class Character(Base):
 
     def __repr__(self) -> str:
         return f"Character(cNAME={self.cNAME!r}, cREALM={self.cREALM!r}, cFACTION={self.cFACTION!r}, cRACE={self.cRACE!r}, cGUILD={self.cGUILD!r}, accountID={self.accountID}, cID={self.cID!r}, account={self.account!r})"
-
 
 class Dungeon(Base):
     __tablename__ = "dungeon"
@@ -86,10 +85,10 @@ class DungeonRun(Base):
     __tablename__ = "dungeonrun"
 
     dungeonrunID: Mapped[int] = mapped_column(primary_key=True)
-    RV: Mapped[datetime.datetime] = mapped_column(server_default = func.CURRENT_TIMESTAMP())
+    #RV: Mapped[datetime.datetime] = mapped_column(server_default = func.CURRENT_TIMESTAMP())
     extID: Mapped[Optional[str]]
-    startDT: Mapped[datetime.datetime]
-    stopDT: Mapped[datetime.datetime]
+    startDT: Mapped[str]
+    stopDT: Mapped[str]
     startLVL: Mapped[int]
     stopLVL: Mapped[int]
     startXP: Mapped[int]
@@ -116,7 +115,7 @@ class CharacterLevelHistory(Base):
     __tablename__ = "characterlevelhistory"
 
     clvlhxID: Mapped[int] = mapped_column(primary_key=True)
-    clvlhxRV: Mapped[datetime.datetime] = mapped_column(server_default = func.CURRENT_TIMESTAMP())
+    #clvlhxRV: Mapped[datetime.datetime] = mapped_column(server_default = func.CURRENT_TIMESTAMP())
     clvlhxNUMBER: Mapped[int]
     clvlhxXP: Mapped[int]
     characterID: Mapped[int] = mapped_column(ForeignKey("character.cID"))
