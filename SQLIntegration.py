@@ -24,6 +24,7 @@ session = Session(engine)
 
 def addCharacters(account, parsedData):
     uniqueCharNames = []
+    uniqueChars = []
     character = {
         'name': "",
         'realm': "Zul'jin",
@@ -31,39 +32,62 @@ def addCharacters(account, parsedData):
         'race': "",
         'guild': "The Fire Heals You"
     }
-
+    #print("length parsed data:", len(parsedData))
     for i in range(len(parsedData)):
         if parsedData['charName'].iloc[i] not in uniqueCharNames:
+
+            uniqueCharNames.append(parsedData['charName'].iloc[i])
+
             character['name'] = parsedData['charName'].iloc[i]
             character['race'] = parsedData['charRace'].iloc[i]
-            uniqueCharNames.append(character)
+            uniqueChars.append(character)
+
+            character = {
+                'name': "",
+                'realm': "Zul'jin",
+                'faction': "Horde",
+                'race': "",
+                'guild': "The Fire Heals You"
+            }
 
     charsInDatabase = []
     for char in session.scalars(select(Character)):
         charsInDatabase.append(char.cNAME)
 
-    if uniqueCharNames[0]['name'] not in charsInDatabase:
-        newChar = Character(
-            cNAME = uniqueCharNames[0]['name'],
-            cREALM = uniqueCharNames[0]['realm'],
-            cFACTION = uniqueCharNames[0]['faction'],
-            cRACE = uniqueCharNames[0]['race'],
-            cGUILD = uniqueCharNames[0]['guild']
-        )
+    addAllChars = False
+    if addAllChars:
+        for i in range(len(uniqueChars)):
+            if uniqueChars[i]['name'] not in charsInDatabase:
+                newChar = Character(
+                    cNAME = uniqueChars[i]['name'],
+                    cREALM = uniqueChars[i]['realm'],
+                    cFACTION = uniqueChars[i]['faction'],
+                    cRACE = uniqueChars[i]['race'],
+                    cGUILD = uniqueChars[i]['guild']
+                )
 
-        user = session.scalars(select(Account).where(Account.wowACCOUNT == "DEATHKRON")).one()
-        user.characters.append(newChar)
-        session.commit()
+                user = session.scalars(select(Account).where(Account.wowACCOUNT == "DEATHKRON")).one()
+                user.characters.append(newChar)
+                session.commit()
 
     charsInDatabase = []
     for char in session.scalars(select(Character)):
         charsInDatabase.append(char.cNAME)
 
-    print("unique char names: ",uniqueCharNames[0])
+    print("num unique chars found:", len(uniqueChars))
     print("Chars in database:", charsInDatabase)
 
+def printCharacters():
+    counter = 0
+    for char in session.scalars(select(Character)):
+        if counter == 0:
+            print("\n\n")
+        counter += 1
+        print(char)
+    print("\n\n")
 
 
+printCharacters()
 # creates tables from models file in database
 #Base.metadata.create_all(engine)
 
