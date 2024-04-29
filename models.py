@@ -64,9 +64,9 @@ class Character(Base):
     dungeonruns: Mapped[List["DungeonRun"]] = relationship()
     levelhistory: Mapped[List["CharacterLevelHistory"]] = relationship()
 
-    def __repr__(self) -> str: 
+    def __repr__(self) -> str:
         return f"Character(cNAME={self.cNAME!r}, cREALM={self.cREALM!r}, cFACTION={self.cFACTION!r}, cRACE={self.cRACE!r}, cGUILD={self.cGUILD!r}, accountID={self.accountID}, cID={self.cID!r}, account={self.account!r})"
-       
+
 
 class Dungeon(Base):
     __tablename__ = "dungeon"
@@ -79,8 +79,8 @@ class Dungeon(Base):
     dungeonminLVL: Mapped[int]
     dungeonmaxLVL: Mapped[int]
     dungeonmaxPLAYERS: Mapped[Optional[int]]
-    
-    dungeonruns = Mapped[List["DungeonRun"]] = relationship()
+
+    dungeonruns: Mapped[List["DungeonRun"]] = relationship()
 
 class DungeonRun(Base):
     __tablename__ = "dungeonrun"
@@ -102,8 +102,8 @@ class DungeonRun(Base):
     dungeonID: Mapped[str] = mapped_column(ForeignKey("dungeon.dID"))
     characterID: Mapped[int] = mapped_column(ForeignKey("character.cID"))
 
-    character= Mapped["Character"] = relationship()
-    dungeon= Mapped["Dungeon"] = relationship()
+    character: Mapped["Character"] = relationship()
+    dungeon: Mapped["Dungeon"] = relationship()
 
 class LevelReference(Base):
     __tablename__ = "levelreference"
@@ -119,5 +119,4 @@ class CharacterLevelHistory(Base):
     clvlhxRV: Mapped[datetime.datetime] = mapped_column(server_default = func.CURRENT_TIMESTAMP())
     clvlhxNUMBER: Mapped[int]
     clvlhxXP: Mapped[int]
-    characterID: Mapped[int] = mapped_column(ForeignKey="Character.cID")
-    
+    characterID: Mapped[int] = mapped_column(ForeignKey("character.cID"))
