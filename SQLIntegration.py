@@ -10,7 +10,7 @@ from models import Person
 # load the database connection into the engine
 userName = "pyClient"
 password = "pythonClientPasswordStrong!!1133$$"
-hostNamePort = "127.0.0.1,1337"
+hostNamePort = "192.168.1.204,1337"
 dbName = "dungeonxptrackerdb"
 
 # returns current drivers for pyodbc on system
@@ -43,6 +43,28 @@ print("Select specific user\n")
 
 session = Session(engine)
 accounts = ["DEATHKRON"]
-SQL_QUERY = select(Person).where(Person.pextID.in_(accounts))
-for person in session.scalars(SQL_QUERY):
+""" 
+SQL_QUERY = select(Person).where(Person.pextID == "DEATHKRON")
+user = session.scalars(SQL_QUERY).one()
+print("user:", user)
+print("current middle name: ", user.middleNAME)
+user.middleNAME = "C"
+print("update name:", user.middleNAME)
+session.commit() """
+
+
+""" with Session(engine) as session:
+    testPerson = Person(
+        pextID = "Puggyberra",
+        firstNAME = "test",
+        lastNAME = "ing",
+        email = "test@testing.com"
+    )
+    session.add(testPerson)
+    session.commit()
+ """
+""" user = session.scalars(SQL_QUERY).one()
+print(user) """
+for person in session.scalars(select(Person)):
     print(person)
+ 
