@@ -24,9 +24,7 @@ class Person(Base):
     firstNAME: Mapped[str]
     middleNAME: Mapped[Optional[str]]
     lastNAME: Mapped[str]
-    email: Mapped[str] #= mapped_column(unique=True)
-    #pcreationDT: Mapped[datetime.datetime] = mapped_column(server_default = func.CURRENT_TIMESTAMP())
-    #lastmodDT: Mapped[datetime.datetime] = mapped_column
+    email: Mapped[str]
 
     accounts: Mapped[List["Account"]] = relationship()
 
