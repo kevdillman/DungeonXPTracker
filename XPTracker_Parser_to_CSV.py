@@ -8,17 +8,150 @@ import numpy as np
 from datetime import date
 from pathlib import Path
 
+# delimiters
+tableStartDelimiter = '{'
+tableEndDelimiter = '}'
+columnStartDelimiter = '['
+columnEndDelimiter = ']'
+dataStartDelimiter = '='
+dataEndDelimiter = ','
+
+delimeters = [tableStartDelimiter, tableEndDelimiter, columnStartDelimiter, columnEndDelimiter, dataStartDelimiter, dataEndDelimiter]
+
+
+# parses a lua table for column and data values
+def getTableData(tableData):
+    tableStart  = tableData[:].find(delimeters[0])
+    tableEnd    = tableData[:].find(delimeters[1])
+    columnStart = tableData[:].find(delimeters[2])
+    columnEnd   = tableData[:].find(delimeters[3])
+    dataStart   = tableData[:].find(delimeters[4])
+    dataEnd     = tableData[:].find(delimeters[5])
+
+    debug = False
+    def checkValidTable():
+
+        # check if any delimiters are not found
+        if  tableStart  < 0 or \
+            tableEnd    < 0 or \
+            columnStart < 0 or \
+            columnEnd   < 0 or \
+            dataStart   < 0 or \
+            dataEnd     < 0:
+                if debug:
+                    print("delimiter not found")
+                return False
+
+        # check if the table end is found before any other delimiter
+        if  tableEnd < tableStart or \
+            tableEnd < columnStart or \
+            tableEnd < columnEnd or \
+            tableEnd < dataStart or \
+            tableEnd < dataEnd:
+                if debug:
+                    print("table end error")
+                return False
+
+        # check if the data end delimiter is found before delimiters it must come after
+        if  dataEnd < tableStart    or \
+            dataEnd < columnStart   or \
+            dataEnd < columnEnd     or \
+            dataEnd < dataStart:
+                if debug:
+                    print("data end error")
+                    print("dataStart:", dataStart)
+                    print("dataEnd:", dataEnd)
+                    print("data found:", tableData[dataStart:dataEnd])
+                    print("tableData[:tableEnd + 1]", tableData[:tableEnd + 1])
+                return False
+
+        # check if the data start delimiter is found before delimiters it must come after
+        if  dataStart < tableStart  or \
+            dataStart < columnStart or \
+            dataStart < columnEnd:
+                if debug:
+                    print("data start error")
+                return False
+
+        # check if the column end delimiter is found before delimiters it must come after
+        if  columnEnd < tableStart  or \
+            columnEnd < columnStart:
+                if debug:
+                    print("column end error")
+                return False
+
+        # check if the column start delimiters is found before the table start delimiter
+        if columnStart < tableStart:
+                if debug:
+                    print("column start error")
+                return False
+
+        return True
+
+    columns = list()
+    data = list()
+    inTable = checkValidTable()
+
+    if not inTable:
+        return {}, -1
+
+    # find all the column values and the data values in the table
+    while inTable:
+        # add found column value to columns list
+        columnValue = tableData[columnStart + 2:columnEnd - 1]
+        columns.append(columnValue)
+
+        dataValue = tableData[dataStart+2:dataEnd]
+        if (len(dataValue) > 0):
+            # remove " " from around data values
+            if dataValue[0] == '\"':
+                dataEnd = dataStart + tableData[dataStart + 3:].find('"') + 4
+                dataValue = tableData[dataStart+3:dataEnd-1]
+
+            # format time values to be parsed by power query
+            if columnValue == "endingTime" or columnValue == "startTime":
+                dataValue = formatDate(dataValue)
+
+        # check if found value is default empty value
+        if (dataValue == 'a'):
+            dataValue = "No Data"
+
+        data.append(dataValue)
+
+        # find next column and data start/end points
+        columnStart = tableData[dataEnd:].find(delimeters[2]) + dataEnd
+        columnEnd   = tableData[dataEnd:].find(delimeters[3]) + dataEnd
+        dataStart   = tableData[dataEnd:].find(delimeters[4]) + dataEnd
+        dataEnd     = tableData[dataEnd + 1:].find(delimeters[5]) + dataEnd + 1
+
+        inTable = checkValidTable()
+
+    table = {}
+    # fill dictionary with found values
+    for i in range(len(columns)):
+        table[columns[i]] = data[i]
+
+    return table, tableEnd
+
 # given a string of data, start point, and begin/end delimeters
 # returns values between delimeters and delimeter locations
 # returns -1 if end of file
 def findNextVariable(searchData, start, delimeterOne, delimiterTwo):
-    varStart = searchData[start:len(searchData)-1].find(delimeterOne) + start
-    varEnd = searchData[varStart:len(searchData)-1].find(delimiterTwo) + varStart
-    endOfSet = searchData[varEnd + 1:len(searchData)-1].find("--")
-
-    # if -- does not appear anymore in the file we've reached the end
-    if endOfSet == -1:
+    varStart = searchData[start:len(searchData)-1].find(delimeterOne)
+    if varStart < 0:
         return -1, -1, ""
+
+    varStart += start
+    varEnd = searchData[varStart:len(searchData)-1].find(delimiterTwo) + varStart
+
+    if varStart < start:
+        print("error found at start:", start)
+        print("varStart:", varStart)
+        print("length data:", len(searchData))
+        print("file state:", searchData[start-1:])
+        input("press enter to continue")
+        return -1, -1, ""
+
     foundValue = searchData[varStart+2:varEnd]
 
     if(len(foundValue) > 1):
@@ -55,21 +188,26 @@ def getCategory(data, start, begginingDelimeter, endingDelimeter):
 
     # prevents referencing out of range
     if(varStart >= 0):
-
         # if at end of set of data move to next set
-        if data[varStart+1] != '\"':
+
+        endOfTable = data[start:len(data)-1].find('}')
+        #if endOfTable > 0:
+        #print("endOfTable:", endOfTable)
+        if endOfTable >= 0 and endOfTable < varStart:
+            #print("found end of table")
             foundValue = -1
             return varStart, varEnd, foundValue
 
         foundValue = data[varStart + 2:varEnd - 1]
         return varStart, varEnd, foundValue
 
+    #print("varStart < 0")
     return -2, -2, -2
 
 # takes keys, data with keys and values and delimeters
 # maps the data to it's key
 # returns the mapped data as a DataFrame
-def getData(data, begginingDelimeter, endingDelimeter, categories):
+def getDataOld(data, begginingDelimeter, endingDelimeter, categories):
     csvVariables = {}
     compiledData = {}
     for column in categories:
@@ -94,9 +232,12 @@ def getData(data, begginingDelimeter, endingDelimeter, categories):
         # if data value initialized to "a" change to "No Data"
         if (foundData == 'a'):
             csvVariables[foundCategory] = ["No Data"]
-
+        #print("varStart:", varStart, "varEnd:", varEnd, "foundCategory:",foundCategory)
         varStart, varEnd, foundCategory = getCategory(data, varEnd + 1, begginingDelimeter[0], endingDelimeter[0])
-
+        #print("varStart:", varStart, "varEnd:", varEnd, "foundCategory:",foundCategory)
+        #if (foundCategory == -1):
+            #print("-1 before appending category data")
+            #input("press enter to continue")
         # add all of the new found dungeon data to the dictionary
         if foundCategory == -1 or foundCategory == -2:
             # initialize compiledData
@@ -113,6 +254,53 @@ def getData(data, begginingDelimeter, endingDelimeter, categories):
             varStart, varEnd, foundCategory = getCategory(data, varEnd + 1, begginingDelimeter[0], endingDelimeter[0])
 
         varStart, varEnd, foundData = findNextVariable(data, varEnd + 1, begginingDelimeter[1], endingDelimeter[1])
+
+
+    #print("out of while loop")
+    #print("varStart:", varStart, "varEnd:", varEnd, "foundData")
+    #print("\ncompiledData:", compiledData, "\n")
+    df = pd.DataFrame(compiledData)
+    return df
+
+
+# takes a file formatted as a lua table
+# returns a data frame of the column headings and row values for all tables in file
+def getData(data):
+
+    tableData, endPoint = getTableData(data)
+    newEndPoint = 0
+    allColumns = {}
+    compiledData = {}
+
+    # find all the columns in the lua tables
+    while newEndPoint >= 0:
+        for column in tableData:
+            if column not in allColumns:
+                allColumns[column] = ""
+
+        tableData, newEndPoint = getTableData(data[endPoint + 2:])
+        endPoint += newEndPoint + 2
+
+    # find all the data values and add them to lists under the columns
+    newEndPoint = 0
+    tableData, endPoint = getTableData(data)
+    while newEndPoint >= 0:
+        if len(compiledData) == 0:
+            for column in allColumns:
+                if column in tableData:
+                    compiledData[column] = [tableData[column]]
+                else:
+                    compiledData[column] = ["No Data"]
+
+        else:
+            for column in allColumns:
+                if column in tableData:
+                    compiledData[column] += [tableData[column]]
+                else:
+                    compiledData[column] += ["No Data"]
+
+        tableData, newEndPoint = getTableData(data[endPoint + 2:])
+        endPoint += newEndPoint + 2
 
     df = pd.DataFrame(compiledData)
     return df
@@ -208,15 +396,9 @@ def main():
     for i in range(0, accountCount):
         accountPath = savedVarsPath + accounts[i][0] + "\\SavedVariables\\DungeonXPTracker.lua"
         dungeonData = Path(accountPath).read_text()
-        parsedDungeonData = dungeonData[dungeonData.find("\"dungeons\"") + 17:]
-        begginingDelimeter = ['[', '=']
-        endingDelimeter = [']', ',']
-
-        # get key values
-        catHeadings = getCategories(parsedDungeonData, begginingDelimeter[0], endingDelimeter[0])
 
         # use key values to map data to keys and get DataFrame from them
-        lvlingData = getData(parsedDungeonData, begginingDelimeter, endingDelimeter, catHeadings)
+        lvlingData = getData(dungeonData[dungeonData.find("\"dungeons\"") + 15:])
 
         # output DataFrame as csv
         accountDisplayName = 0

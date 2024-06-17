@@ -102,6 +102,25 @@ dungeonFrame:SetScript("OnEvent",
                 printCurrentStatsGuild()
             end
 
+            -- command /xpt info
+            -- prints the current dungeon info
+            if (msg == "info") then
+                -- msg = dungeonOutputRaw(GetInstanceInfo())
+                local name, type, diffNum, diffTxt, maxPlayers, dynamicDifficulty, isDynamic, instanceMapID, lfgID = GetInstanceInfo()
+
+                print("contents: ")
+                print("name:", name)
+                print("type:", type)
+                print("diffNum:", diffNum)
+                print("diffTxt:", diffTxt)
+                print("maxPlayers:", maxPlayers)
+                print("dynamicDifficulty:", dynamicDifficulty)
+                print("isDynamic:", isDynamic)
+                print("instanceMapID:", instanceMapID)
+                print("lfgID:", lfgID)
+
+            end
+
             -- command /xpt window
             -- display window with information about dungeon runs
             if (msg == "window") then
