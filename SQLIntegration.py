@@ -4,25 +4,81 @@ from sqlalchemy.engine import URL
 from sqlalchemy import create_engine, select
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import NoResultFound
 import pyodbc
 from models import Base, Person, Account, Character, Dungeon, DungeonRun, LevelReference, CharacterLevelHistory
 
 # load the database connection into the engine
-userName = "pyClient"
-password = "pythonClientPasswordStrong!!1133$$"
-hostNamePort = "192.168.1.204,1337"
-dbName = "dungeonxptrackerdb"
+userName = "username"
+password = "userpassword"
+hostNamePort = "serverIP,port"
+dbName = "databaseName"
 
 # returns current drivers for pyodbc on system
 #driverNames = [x for x in pyodbc.drivers() if x.endswith(' for SQL Server')]
 #print(pyodbc.drivers())
 
-# create engine and connect to database
-engine = create_engine("mssql+pyodbc://" + userName +":" + password +"@" + hostNamePort + "/" + dbName + "?driver=ODBC+Driver+17+for+SQL+Server", echo=False)
-engine.connect()
-session = Session(engine)
+def connectDatabase():
+    # create engine and connect to database
+    print("creating engine")
+    engine = create_engine("mssql+pyodbc://" + userName +":" + password +"@" + hostNamePort + "/" + dbName + "?driver=ODBC+Driver+17+for+SQL+Server", echo=False)
+    print("connecting to db server")
+    engine.connect()
+    print("creating session")
+    session = Session(engine)
+    print("session created")
+    return session
 
-def addCharacters(account, parsedData):
+def addData(accountName: str, parsedData):
+    """
+    Ensure account exists, then add any new characters
+    (and later dungeon runs, levels, etc.).
+
+    Args:
+        accountName (str): Account name used to link characters.
+        parsedData (pd.DataFrame): Parsed data from CSV with headings like:
+            ['endingTime','endingMoney','startLVL','startRest','endingXP',
+             'startMoney','dungeon','charRace','startXP','charName',
+             'endingRest','startTime','charRole','endingLVL']
+    """
+    session = connectDatabase()
+
+    # Step 1: find person
+    try:
+        person = session.scalars(
+            select(Person).where(Person.firstNAME == "Kevin")  # adjust lookup!
+        ).one()
+    except NoResultFound:
+        person = Person(
+            # fill person table
+                firstNAME="",
+                lastNAME="",
+                email=""
+        )
+        session.add(person)
+        session.flush()  # assigns person.pID
+
+    # Step 2: find or create account
+    try:
+        account = session.scalars(
+            select(Account).where(Account.wowACCOUNT == accountName)
+        ).one()
+    except NoResultFound:
+        account = Account(
+            wowACCOUNT=accountName,
+            bnetNAME=accountName,
+            personID=person.pID
+        )
+        session.add(account)
+        session.flush()
+
+    # --- 3. Add any new characters for this account ---
+    addCharacters(account, parsedData, session)
+
+    # --- 4. TODO: Add dungeon run or level history handling here ---
+    # This is where you’ll later expand `addData`
+
+def addCharacters(account, parsedData, session):
     uniqueCharNames = []
     uniqueChars = []
     character = {
@@ -54,7 +110,7 @@ def addCharacters(account, parsedData):
     for char in session.scalars(select(Character)):
         charsInDatabase.append(char.cNAME)
 
-    addAllChars = False
+    addAllChars = True
     if addAllChars:
         for i in range(len(uniqueChars)):
             if uniqueChars[i]['name'] not in charsInDatabase:
@@ -77,7 +133,7 @@ def addCharacters(account, parsedData):
     print("num unique chars found:", len(uniqueChars))
     print("Chars in database:", charsInDatabase)
 
-def printCharacters():
+def printCharacters(session):
     counter = 0
     for char in session.scalars(select(Character)):
         if counter == 0:
@@ -86,75 +142,20 @@ def printCharacters():
         print(char)
     print("\n\n")
 
+if __name__ == "__main__":
+    # Only runs if you call python SQLIntegration.py directly
+    #seedKevin()
+    pass
 
-printCharacters()
-# creates tables from models file in database
-#Base.metadata.create_all(engine)
+#printCharacters()
 
 # creates connection to pyodbc database
 #connectionString = f'DRIVER={{ODBC Driver 18 for SQL Server}};ADDRESS={hostNamePort};UID={userName};PWD={password};DATABASE={dbName};TrustServerCertificate=YES'
 #conn = pyodbc.connect(connectionString)
 
-# storing sql query
-SQL_QUERY = """
-SELECT *
-FROM INFORMATION_SCHEMA.COLUMNS
-"""
-
 #cursor = conn.cursor()
 #cursor.execute(SQL_QUERY)
 
-kevinCharacter = Character(
-        cNAME = "Lilmortade",
-        cREALM = "Zul'jin",
-        cFACTION = "Horde",
-        cRACE = "Goblin",
-        cGUILD = "The Fire Heals You"
-)
-
-kevinAccounts = [
-    Account(
-        wowACCOUNT = "DEATHKRON",
-        bnetNAME = "DEATHKRON"
-    )
-]
-
-kevin = Person(
-    firstNAME = "Kevin",
-    lastNAME = "Dillman",
-    email = "kevdillman@gmail.com",
-    accounts = kevinAccounts
-)
-
-writeData = False
-if writeData:
-    # adds a Person and their account
-    with Session(engine) as session:
-        session.add(kevinCharacter)
-        session.commit()
-
-    # adds a character to an account
-    user = session.scalars(select(Account).where(Account.wowACCOUNT == "DEATHKRON")).one()
-    user.characters.append(kevinCharacter)
-    session.commit()
-
-
-#user = session.scalars(SQL_QUERY).one()
-#print(user)
-#select(Person).where(Account.wowACCOUNT == "DEATHKRON")
-#for person in session.scalars(select(Character)):
-    #print(person)
-
-
-""" with engine.connect() as connection:
-    records = connection.execute(text(SQL_QUERY))
-    for r in records:
-        print(r) """
-
-#print("Select specific user\n")
-
-#session = Session(engine)
-#accounts = ["DEATHKRON"]
 """
 SQL_QUERY = select(Person).where(Person.pextID == "DEATHKRON")
 user = session.scalars(SQL_QUERY).one()

@@ -8,7 +8,9 @@ import numpy as np
 from datetime import date
 from pathlib import Path
 from savedVariableParser import getData
-#from SQLIntegration import addCharacters
+print("loading SQLIntegration")
+from SQLIntegration import addData
+print("SQLIntegration loaded")
 
 # gets the account name and path to account's saved variables
 def getPaths(pathsDoc):
@@ -93,12 +95,6 @@ def main():
         accountPath = savedVarsPath + accounts[i][0] + "\\SavedVariables\\DungeonXPTracker.lua"
         dungeonData = Path(accountPath).read_text()
 
-        #parsedDungeonData = dungeonData[dungeonData.find("\"dungeons\"") + 17:]
-        #begginingDelimeter = ['[', '=']
-        #endingDelimeter = [']', ',']
-        # get key values
-        #catHeadings = getCategories(parsedDungeonData, begginingDelimeter[0], endingDelimeter[0])
-
         # use key values to map data to keys and get DataFrame from them
         lvlingData = getData(dungeonData[dungeonData.find("\"dungeons\"") + 15:])
 
@@ -113,8 +109,8 @@ def main():
         print("exported:", accounts[i][accountDisplayName] + "_dungeonData.csv")
 
         # add data to SQL Database
-            #if accounts[i][accountDisplayName] == "DEATHKRON":
-                #addCharacters(accounts[i][accountDisplayName], lvlingData)
+        if accounts[i][accountDisplayName] == "DEATHKRON":
+            addData(accounts[i][accountDisplayName], lvlingData)
 
     print("Parsing Complete")
 
