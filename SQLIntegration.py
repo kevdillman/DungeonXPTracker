@@ -1,5 +1,6 @@
 # Class to implement Azure SQL Database integration
 
+from pathlib import Path
 from sqlalchemy.engine import URL
 from sqlalchemy import create_engine, select
 from sqlalchemy import text
@@ -8,20 +9,71 @@ from sqlalchemy.exc import NoResultFound
 import pyodbc
 from models import Base, Person, Account, Character, Dungeon, DungeonRun, LevelReference, CharacterLevelHistory
 
-# load the database connection into the engine
-userName = "username"
-password = "userpassword"
-hostNamePort = "serverIP,port"
-dbName = "databaseName"
-
 # returns current drivers for pyodbc on system
 #driverNames = [x for x in pyodbc.drivers() if x.endswith(' for SQL Server')]
 #print(pyodbc.drivers())
 
+# gets the account name and path to account's saved variables
+def getServerInfo(fileData = Path('./sqlServerInfo.txt').read_text()):
+    userName = "username"
+    password = "userpassword"
+    hostName = "serverIP"
+    hostPort = "port"
+    dbName = "databaseName"
+
+    # make sure required fields are in credential file
+    fields = {"userName": "user",
+              "password": "pass",
+              "hostName": "host",
+              "hostPort": "port",
+              "dbName": "db",
+              ",": ""}
+
+    for field in fields:
+        if fileData.find(field) == -1:
+            print(field, " missing in sqlServerInfo.txt")
+            return 1
+
+    for field in fields:
+        # end loop after last field is filled
+        if field != ",":
+            # find field label
+            fieldBegin = fileData.find(field) + 2
+            fieldEnd = fileData.find(',', fieldBegin)
+
+            # get field data
+            fieldBegin = fieldEnd + 2
+            fieldEnd = fileData.find(',', fieldBegin)
+            nextComma = fileData.find(',', fieldBegin)
+            nextNewLine = fileData.find('\n', fieldBegin)
+
+            # check if field data line ends in , or newline
+            if len(fileData[fieldBegin:nextNewLine]) < len(fileData[fieldBegin:nextComma]):
+                fieldEnd = fileData.find('\n', fieldBegin)
+
+            if fieldEnd == -1:
+                fieldEnd = fileData.find('\n', fieldBegin)
+            if fieldEnd == -1:
+                print("invalid format for data field:", field)
+                return 1
+
+            # add field data to credential dictionary
+            fields[field] = fileData[fieldBegin:fieldEnd]
+
+    return fields
+
 def connectDatabase():
+    # load the database connection info
+    serverCredentials = getServerInfo()
+    userName = serverCredentials["userName"]
+    password = serverCredentials["password"]
+    hostName = serverCredentials["hostName"]
+    hostPort = serverCredentials["hostPort"]
+    dbName =   serverCredentials["dbName"]
+
     # create engine and connect to database
     print("creating engine")
-    engine = create_engine("mssql+pyodbc://" + userName +":" + password +"@" + hostNamePort + "/" + dbName + "?driver=ODBC+Driver+17+for+SQL+Server", echo=False)
+    engine = create_engine("mssql+pyodbc://" + userName +":" + password +"@" + hostName + "," + hostPort + "/" + dbName + "?driver=ODBC+Driver+17+for+SQL+Server", echo=False)
     print("connecting to db server")
     engine.connect()
     print("creating session")
@@ -88,7 +140,7 @@ def addCharacters(account, parsedData, session):
         'race': "",
         'guild': "The Fire Heals You"
     }
-    #print("length parsed data:", len(parsedData))
+    print("length parsed data:", len(parsedData))
     for i in range(len(parsedData)):
         if parsedData['charName'].iloc[i] not in uniqueCharNames:
 
@@ -145,6 +197,7 @@ def printCharacters(session):
 if __name__ == "__main__":
     # Only runs if you call python SQLIntegration.py directly
     #seedKevin()
+    print(getServerInfo())
     pass
 
 #printCharacters()
