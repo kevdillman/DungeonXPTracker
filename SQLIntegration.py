@@ -194,10 +194,30 @@ def printCharacters(session):
         print(char)
     print("\n\n")
 
+def manualAddPerson():
+    session = connectDatabase()
+    fName = input("Person first name: ")
+    lName = input("Person last name: ")
+    emailAddress = input("Person email: ")
+
+    person = Person(
+        firstNAME=fName,
+        lastNAME=lName,
+        email=emailAddress
+    )
+    session.add(person)
+    session.commit()
+
 if __name__ == "__main__":
     # Only runs if you call python SQLIntegration.py directly
     #seedKevin()
-    print(getServerInfo())
+    #print(getServerInfo())
+    #manualAddPerson()
+    session = connectDatabase()
+    SQL_QUERY = select(Person)
+    user = session.scalars(SQL_QUERY).one()
+    print("user:", user)
+    session.close()
     pass
 
 #printCharacters()

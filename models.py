@@ -29,7 +29,7 @@ class Person(Base):
     accounts: Mapped[List["Account"]] = relationship(back_populates="person")
 
     def __repr__(self) -> str:
-        accountNames = getListValues(self.accounts, "bnetNAME")
+        accountNames = getListValues(self.accounts, "wowACCOUNT")
 
         return (
             f"Person(pID={self.pID!r}, "
