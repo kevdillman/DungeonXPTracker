@@ -164,72 +164,16 @@ def addAccount(accountName, person: Person, session: Session):
     return account
 
 def addCharacters(account: Account, parsedData, session: Session):
-    uniqueCharKeys = []
-    uniqueChars = []
-    character = {
-        'name': "",
-        'realm': "Zul'jin",
-        'faction': "Horde",
-        'race': "",
-        'guild': "The Fire Heals You"
-    }
-    factionRaces = {
-        # Horde
-        "Orc": "Horde",
-        "Troll": "Horde",
-        "Undead": "Horde",
-        "Tauren": "Horde",
-        "Blood Elf": "Horde",
-        "Goblin": "Horde",
-        "Nightborne": "Horde",
-        "Highmountain Tauren": "Horde",
-        "Mag'har Orc": "Horde",
-        "Zandalari Troll": "Horde",
-
-        # Alliance
-        "Human": "Alliance",
-        "Dwarf": "Alliance",
-        "Night Elf": "Alliance",
-        "Gnome": "Alliance",
-        "Draenei": "Alliance",
-        "Worgen": "Alliance",
-        "Void Elf": "Alliance",
-        "Lightforged Draenei": "Alliance",
-        "Dark Iron Dwarf": "Alliance",
-        "Kul Tiran": "Alliance",
-        "Mechagnome": "Alliance",
-    }
     print("length parsed data:", len(parsedData))
 
-    for i in range(len(parsedData)):
-        charName = parsedData['charName'].iloc[i]
-        charRace = parsedData['charRace'].iloc[i]
-        checkKey = (charName, charRace)
-
-        if checkKey not in uniqueCharKeys:
-
-            uniqueCharKeys.append(checkKey)
-
-            character['name'] = parsedData['charName'].iloc[i]
-            character['race'] = parsedData['charRace'].iloc[i]
-            character['faction'] = factionRaces.get(parsedData['charRace'].iloc[i], "Unknown")
-            uniqueChars.append(character)
-
-            character = {
-                'name': "",
-                'realm': "Zul'jin",
-                'faction': "Horde",
-                'race': "",
-                'guild': "The Fire Heals You"
-            }
+    uniqueChars, uniqueCharKeys = findUniqueCharacters(parsedData)
+    print("num unique chars found:", len(uniqueChars))
 
     print("Unique chars found:")
     for value in sorted(uniqueCharKeys, key=lambda x: x[0]):
         print(value)
-    #for entry in uniqueChars:
-        #print(entry['name'], " ", entry['race'])
-    print(uniqueChars[27])
 
+    print(uniqueChars[27])
 
     # add the character(s) to the database
     addAllChars = False
@@ -256,8 +200,6 @@ def addCharacters(account: Account, parsedData, session: Session):
         user = session.scalars(select(Account).where(Account.wowACCOUNT == "DEATHKRON")).one()
         user.characters.append(newChar)
         session.commit()
-
-    print("num unique chars found:", len(uniqueChars))
 
 def manualAddPerson(session: Session):
     # allows a person record to be entered from console
@@ -338,6 +280,70 @@ def selectPerson(session: Session, people: Person = None):
         else:
             print("No user found with given ID")
             return False
+
+def findUniqueCharacters(parsedData):
+    # searches for unique characters
+    uniqueCharKeys = []
+    uniqueChars = []
+    character = {
+        'name': "",
+        'realm': "Zul'jin",
+        'faction': "Horde",
+        'race': "",
+        'guild': "The Fire Heals You"
+    }
+    factionRaces = {
+        # Horde
+        "Orc": "Horde",
+        "Troll": "Horde",
+        "Undead": "Horde",
+        "Tauren": "Horde",
+        "Blood Elf": "Horde",
+        "Goblin": "Horde",
+        "Nightborne": "Horde",
+        "Highmountain Tauren": "Horde",
+        "Mag'har Orc": "Horde",
+        "Zandalari Troll": "Horde",
+
+        # Alliance
+        "Human": "Alliance",
+        "Dwarf": "Alliance",
+        "Night Elf": "Alliance",
+        "Gnome": "Alliance",
+        "Draenei": "Alliance",
+        "Worgen": "Alliance",
+        "Void Elf": "Alliance",
+        "Lightforged Draenei": "Alliance",
+        "Dark Iron Dwarf": "Alliance",
+        "Kul Tiran": "Alliance",
+        "Mechagnome": "Alliance",
+    }
+
+    for i in range(len(parsedData)):
+        # create a composite key to check of character name and race
+        charName = parsedData['charName'].iloc[i]
+        charRace = parsedData['charRace'].iloc[i]
+        checkKey = (charName, charRace)
+
+        if checkKey not in uniqueCharKeys:
+            uniqueCharKeys.append(checkKey)
+
+            # store and append found unique values
+            character['name'] = parsedData['charName'].iloc[i]
+            character['race'] = parsedData['charRace'].iloc[i]
+            character['faction'] = factionRaces.get(parsedData['charRace'].iloc[i], "Unknown")
+            uniqueChars.append(character)
+
+            # reset character to empty
+            character = {
+                'name': "",
+                'realm': "Zul'jin",
+                'faction': "Horde",
+                'race': "",
+                'guild': "The Fire Heals You"
+            }
+
+    return uniqueChars, uniqueCharKeys
 
 def printAllPersons(session: Session):
     SQL_QUERY = select(Person)
