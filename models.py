@@ -92,7 +92,7 @@ class Character(Base):
     levelhistory: Mapped[List["CharacterLevelHistory"]] = relationship(back_populates="character")
 
     def __repr__(self) -> str:
-            # Account info
+        # Account info
         if self.account:
             accountBnetName = self.account.bnetNAME if self.account.bnetNAME else "NO_DATA"
         else:

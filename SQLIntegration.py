@@ -112,7 +112,7 @@ def addData(accountName: str, parsedData = None):
         print("Account info: ", account)
 
     # --- 3. Add any new characters for this account ---
-    #addCharacters(account, parsedData, session)
+    addCharacters(account, parsedData, session)
 
     # --- 4. TODO: Add dungeon run or level history handling here ---
     # This is where you’ll later expand `addData`
@@ -163,8 +163,8 @@ def addAccount(accountName, person: Person, session: Session):
     session.commit()
     return account
 
-def addCharacters(account, parsedData, session: Session):
-    uniqueCharNames = []
+def addCharacters(account: Account, parsedData, session: Session):
+    uniqueCharKeys = []
     uniqueChars = []
     character = {
         'name': "",
@@ -173,14 +173,46 @@ def addCharacters(account, parsedData, session: Session):
         'race': "",
         'guild': "The Fire Heals You"
     }
-    print("length parsed data:", len(parsedData))
-    for i in range(len(parsedData)):
-        if parsedData['charName'].iloc[i] not in uniqueCharNames:
+    factionRaces = {
+        # Horde
+        "Orc": "Horde",
+        "Troll": "Horde",
+        "Undead": "Horde",
+        "Tauren": "Horde",
+        "Blood Elf": "Horde",
+        "Goblin": "Horde",
+        "Nightborne": "Horde",
+        "Highmountain Tauren": "Horde",
+        "Mag'har Orc": "Horde",
+        "Zandalari Troll": "Horde",
 
-            uniqueCharNames.append(parsedData['charName'].iloc[i])
+        # Alliance
+        "Human": "Alliance",
+        "Dwarf": "Alliance",
+        "Night Elf": "Alliance",
+        "Gnome": "Alliance",
+        "Draenei": "Alliance",
+        "Worgen": "Alliance",
+        "Void Elf": "Alliance",
+        "Lightforged Draenei": "Alliance",
+        "Dark Iron Dwarf": "Alliance",
+        "Kul Tiran": "Alliance",
+        "Mechagnome": "Alliance",
+    }
+    print("length parsed data:", len(parsedData))
+
+    for i in range(len(parsedData)):
+        charName = parsedData['charName'].iloc[i]
+        charRace = parsedData['charRace'].iloc[i]
+        checkKey = (charName, charRace)
+
+        if checkKey not in uniqueCharKeys:
+
+            uniqueCharKeys.append(checkKey)
 
             character['name'] = parsedData['charName'].iloc[i]
             character['race'] = parsedData['charRace'].iloc[i]
+            character['faction'] = factionRaces.get(parsedData['charRace'].iloc[i], "Unknown")
             uniqueChars.append(character)
 
             character = {
@@ -191,12 +223,24 @@ def addCharacters(account, parsedData, session: Session):
                 'guild': "The Fire Heals You"
             }
 
-    charsInDatabase = []
-    for char in session.scalars(select(Character)):
-        charsInDatabase.append(char.cNAME)
+    print("Unique chars found:")
+    for value in sorted(uniqueCharKeys, key=lambda x: x[0]):
+        print(value)
+    #for entry in uniqueChars:
+        #print(entry['name'], " ", entry['race'])
+    print(uniqueChars[27])
 
-    addAllChars = True
+
+    # add the character(s) to the database
+    addAllChars = False
     if addAllChars:
+
+        # compile list of characters in database already
+        charsInDatabase = []
+        for char in session.scalars(select(Character)):
+            charsInDatabase.append(char.cNAME)
+
+        # any characters not in the database add them
         for i in range(len(uniqueChars)):
             if uniqueChars[i]['name'] not in charsInDatabase:
                 newChar = Character(
@@ -204,19 +248,16 @@ def addCharacters(account, parsedData, session: Session):
                     cREALM = uniqueChars[i]['realm'],
                     cFACTION = uniqueChars[i]['faction'],
                     cRACE = uniqueChars[i]['race'],
-                    cGUILD = uniqueChars[i]['guild']
+                    cGUILD = uniqueChars[i]['guild'],
+                    accountID = account.aID
                 )
 
-                user = session.scalars(select(Account).where(Account.wowACCOUNT == "DEATHKRON")).one()
-                user.characters.append(newChar)
-                session.commit()
-
-    charsInDatabase = []
-    for char in session.scalars(select(Character)):
-        charsInDatabase.append(char.cNAME)
+        print("Chars in database:", charsInDatabase)
+        user = session.scalars(select(Account).where(Account.wowACCOUNT == "DEATHKRON")).one()
+        user.characters.append(newChar)
+        session.commit()
 
     print("num unique chars found:", len(uniqueChars))
-    print("Chars in database:", charsInDatabase)
 
 def manualAddPerson(session: Session):
     # allows a person record to be entered from console
