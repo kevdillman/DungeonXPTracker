@@ -121,30 +121,35 @@ def addData(accountName: str, parsedData):
 
 def linkAccountToPerson(accountName, session: Session):
     # finds the person record associated with the given accountName
-    person = session.scalars(select(Person).where(Person.accounts.any(Account.wowACCOUNT == accountName))).all()
+    person = session.scalars(select(Person).where(Person.accounts.any(Account.wowACCOUNT == accountName))).first()
+
+    if person:
+        print("linking to: ", person)
+        return person
 
     # if there is no matching person record allow one to be created
-    if not person:
+    else:
         print(f"no person associated with account \"{accountName}\" found")
         linkUser = input("Would you like to link a person to this account, Y/N: ")
         if linkUser != "Y":
             return False
 
-        maxPID = printAllPersons(session)
-        searchUserID = input("ID of user you want to associate account with or enter 'C' to create a new user: ")
-        if searchUserID == 'C':
-            manualAddPerson(session)
-        elif (searchUserID.isdecimal()) and (int(searchUserID) >= 0 and int(searchUserID) <= maxPID):
-            person = session.scalars(select(Person).where(Person.pID == searchUserID)).first()
-            #for user in person:
-            print("linking to: ", person)
+        # search for, list, or create person
+        search = input( "Search for person  (1)\n"
+                        "List all people    (2)\n"
+                        "Create new user    (3)\n")
+        match int(search):
+            case 1:
+                person = searchPerson(session)
+            case 2:
+                printAllPersons(session)
+                person = selectPerson(session)
+            case 3:
+                person = manualAddPerson(session)
+            case _:
+                print("Invalid selection")
+                return False
 
-            return person
-
-        if not person:
-            print("No user found with given ID")
-            return False
-    else:
         return person
 
 def addCharacters(account, parsedData, session: Session):
@@ -203,7 +208,7 @@ def addCharacters(account, parsedData, session: Session):
     print("Chars in database:", charsInDatabase)
 
 def manualAddPerson(session: Session):
-    #session = connectDatabase()
+    # allows a person record to be entered from console
     fName = input("Person first name: ")
     lName = input("Person last name: ")
     emailAddress = input("Person email: ")
@@ -215,6 +220,7 @@ def manualAddPerson(session: Session):
     )
     session.add(person)
     session.flush()
+    return person
 
 def manualAddAccount():
     session = connectDatabase()
@@ -238,17 +244,48 @@ def manualAddAccount():
     session.add(account)
     session.commit()
 
-def searchUsers(session: Session):
+def searchPerson(session: Session):
+    # search the person table for a match by first and last name
     searchFirstName = input("First name of user you want to search for: ")
     searchLastName = input("Last name of the user you want to search for: ")
     users = session.scalars(select(Person).where(Person.firstNAME == searchFirstName).where(Person.lastNAME == searchLastName)).all()
+    # search on just first name
+    #users = session.scalars(select(Person).where(Person.firstNAME == searchFirstName)).all()
 
     if not users:
         print("no results found")
+        return False
     else:
+        counter = 0
         for i, user in enumerate(users, start=1):
-            print(f"{i}. {user.firstNAME} {user.lastNAME} (id={user.pID})")
+            counter += 1
+            #print(f"{i}. {user.firstNAME} {user.lastNAME} pID={user.pID}")
             print("user:", user)
+            person = user
+        if counter > 1:
+            person = selectPerson(session, users)
+        return person
+
+def selectPerson(session: Session, people: Person = None):
+    # select a person by their pID
+    searchUserID = input("ID of user you want to associate account with: ")
+    if people:
+        for i, person in enumerate(people, start=1):
+            if person.pID == int(searchUserID):
+                print("linking to: ", person)
+                return person
+
+        print("No user found with given ID")
+        return False
+
+    if (searchUserID.isdecimal()) and (int(searchUserID) >= 0):
+        person = session.scalars(select(Person).where(Person.pID == searchUserID)).first()
+        if person:
+            print("linking to: ", person)
+            return person
+        else:
+            print("No user found with given ID")
+            return False
 
 def printAllPersons(session: Session):
     SQL_QUERY = select(Person)
@@ -287,8 +324,9 @@ if __name__ == "__main__":
     #seedKevin()
     session = connectDatabase()
     person = linkAccountToPerson("testAccount", session)
-    printAllPersons(session)
-    printAllAccounts(session)
+    print("found person is: ", person)
+    #printAllPersons(session)
+    #printAllAccounts(session)
     session.close()
     pass
 
