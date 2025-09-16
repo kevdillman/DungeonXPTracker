@@ -76,7 +76,7 @@ def connectDatabase():
     print("session created")
     return session
 
-def addData(accountName: str, parsedData):
+def addData(accountName: str, parsedData = None):
     """
     Ensure account exists, then add any new characters
     (and later dungeon runs, levels, etc.).
@@ -88,6 +88,7 @@ def addData(accountName: str, parsedData):
              'startMoney','dungeon','charRace','startXP','charName',
              'endingRest','startTime','charRole','endingLVL']
     """
+    # open sql session
     session = connectDatabase()
 
     # Step 1: find person
@@ -100,36 +101,35 @@ def addData(accountName: str, parsedData):
         print("Account linked to Person: ", person)
 
     # Step 2: find or create account
-    try:
-        account = session.scalars(
-            select(Account).where(Account.wowACCOUNT == accountName)
-        ).one()
-    except NoResultFound:
-        account = Account(
-            wowACCOUNT=accountName,
-            bnetNAME=accountName,
-            personID=person.pID
-        )
-        session.add(account)
-        session.flush()
+    account = session.scalars(select(Account).where(Account.wowACCOUNT == accountName)).first()
+    if account:
+        print("Account info: ", account)
+    else:
+        accountChoice = input("No account found, would you like to create one Y/N: ")
+        if accountChoice != "Y":
+            return
+        account = addAccount(accountName, person, session)
+        print("Account info: ", account)
 
     # --- 3. Add any new characters for this account ---
-    addCharacters(account, parsedData, session)
+    #addCharacters(account, parsedData, session)
 
     # --- 4. TODO: Add dungeon run or level history handling here ---
     # This is where you’ll later expand `addData`
+    #session.flush()
+    session.close()
 
 def linkAccountToPerson(accountName, session: Session):
     # finds the person record associated with the given accountName
     person = session.scalars(select(Person).where(Person.accounts.any(Account.wowACCOUNT == accountName))).first()
 
     if person:
-        print("linking to: ", person)
+        #print("linking to: ", person)
         return person
 
     # if there is no matching person record allow one to be created
     else:
-        print(f"no person associated with account \"{accountName}\" found")
+        print(f"No person associated with account \"{accountName}\" found")
         linkUser = input("Would you like to link a person to this account, Y/N: ")
         if linkUser != "Y":
             return False
@@ -151,6 +151,17 @@ def linkAccountToPerson(accountName, session: Session):
                 return False
 
         return person
+
+def addAccount(accountName, person: Person, session: Session):
+    bName = input("bnet name: ")
+    account = Account(
+        wowACCOUNT=accountName,
+        bnetNAME=bName,
+        personID=person.pID
+    )
+    session.add(account)
+    session.commit()
+    return account
 
 def addCharacters(account, parsedData, session: Session):
     uniqueCharNames = []
@@ -272,7 +283,7 @@ def selectPerson(session: Session, people: Person = None):
     if people:
         for i, person in enumerate(people, start=1):
             if person.pID == int(searchUserID):
-                print("linking to: ", person)
+                print("Selected: ", person)
                 return person
 
         print("No user found with given ID")
@@ -321,13 +332,15 @@ def printCharacters(session: Session):
 
 if __name__ == "__main__":
     # Only runs if you call python SQLIntegration.py directly
-    #seedKevin()
-    session = connectDatabase()
-    person = linkAccountToPerson("testAccount", session)
-    print("found person is: ", person)
+    #session = connectDatabase()
+    #person = linkAccountToPerson("testAccount", session)
+    #print("found person is: ", person)
     #printAllPersons(session)
     #printAllAccounts(session)
-    session.close()
+    #session.close()
+
+    addData("testAccount")
+
     pass
 
 #printCharacters()
