@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from sqlalchemy.engine import URL
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, select, func
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
@@ -13,13 +13,8 @@ from models import Base, Person, Account, Character, Dungeon, DungeonRun, LevelR
 #driverNames = [x for x in pyodbc.drivers() if x.endswith(' for SQL Server')]
 #print(pyodbc.drivers())
 
-# gets the account name and path to account's saved variables
 def getServerInfo(fileData = Path('./sqlServerInfo.txt').read_text()):
-    userName = "username"
-    password = "userpassword"
-    hostName = "serverIP"
-    hostPort = "port"
-    dbName = "databaseName"
+    # reads the SQL server connection information from sqlServerInfo.txt file
 
     # make sure required fields are in credential file
     fields = {"userName": "user",
@@ -96,19 +91,26 @@ def addData(accountName: str, parsedData):
     session = connectDatabase()
 
     # Step 1: find person
-    try:
-        person = session.scalars(
-            select(Person).where(Person.firstNAME == "Kevin")  # adjust lookup!
-        ).one()
+    #searchFirstName = input("First name of user you want to search for: ")
+    #searchLastName = input("Last name of the user you want to search for: ")
+    person = session.scalars(select(Person).where(Person.accounts == accountName)).all()
+
+    if not person:
+        print("no results found")
+    else:
+        for i, user in enumerate(person, start=1):
+            print(f"{i}. {user.firstNAME} {user.lastNAME} (id={user.pID})")
+            print("user:", user)
+    """try:
+        person = session.scalars(select(Person).where(Person.firstNAME == "Kevin")).one()
     except NoResultFound:
         person = Person(
-            # fill person table
                 firstNAME="",
                 lastNAME="",
                 email=""
         )
         session.add(person)
-        session.flush()  # assigns person.pID
+        session.flush()  # assigns person.pID"""
 
     # Step 2: find or create account
     try:
@@ -130,7 +132,7 @@ def addData(accountName: str, parsedData):
     # --- 4. TODO: Add dungeon run or level history handling here ---
     # This is where you’ll later expand `addData`
 
-def addCharacters(account, parsedData, session):
+def addCharacters(account, parsedData, session: Session):
     uniqueCharNames = []
     uniqueChars = []
     character = {
@@ -185,17 +187,32 @@ def addCharacters(account, parsedData, session):
     print("num unique chars found:", len(uniqueChars))
     print("Chars in database:", charsInDatabase)
 
-def printCharacters(session):
-    counter = 0
-    for char in session.scalars(select(Character)):
-        if counter == 0:
-            print("\n\n")
-        counter += 1
-        print(char)
-    print("\n\n")
+def linkAccountToPerson(accountName, session: Session):
+    # finds the person record associated with the given accountName
+    person = session.scalars(select(Person).where(Person.accounts.any(Account.wowACCOUNT == accountName))).all()
 
-def manualAddPerson():
-    session = connectDatabase()
+    # if there is no matching person record allow one to be created
+    if not person:
+        print(f"no person associated with account \"{accountName}\" found")
+        linkUser = input("Would you like to link a person to this account, Y/N: ")
+        if linkUser != "Y":
+            return False
+
+        printAllPersons(session)
+        searchUserID = input("ID of user you want to associate account with or enter 'C' to create a new user: ")
+        if searchUserID == 'C':
+            manualAddPerson(session)
+        else:
+            person = session.scalars(select(Person).where(Person.pID == searchUserID))
+
+            if not person:
+                print("No user found with given ID")
+                return False
+    else:
+        return person
+
+def manualAddPerson(session: Session):
+    #session = connectDatabase()
     fName = input("Person first name: ")
     lName = input("Person last name: ")
     emailAddress = input("Person email: ")
@@ -206,17 +223,81 @@ def manualAddPerson():
         email=emailAddress
     )
     session.add(person)
+    session.flush()
+
+def manualAddAccount():
+    session = connectDatabase()
+    accountName = input("Account name: ")
+    bName = input("bnet name: ")
+
+    SQL_QUERY = select(Person)
+    user = session.scalars(SQL_QUERY)
+    for users in user:
+        print(users)
+
+    personNum = input("Which pID should be associated to this account: ")
+
+    person = session.scalars(select(Person).where(Person.pID == personNum)).one()
+
+    account = Account(
+        wowACCOUNT=accountName,
+        bnetNAME=bName,
+        personID=person.pID
+    )
+    session.add(account)
     session.commit()
+
+def searchUsers(session: Session):
+    searchFirstName = input("First name of user you want to search for: ")
+    searchLastName = input("Last name of the user you want to search for: ")
+    users = session.scalars(select(Person).where(Person.firstNAME == searchFirstName).where(Person.lastNAME == searchLastName)).all()
+
+    if not users:
+        print("no results found")
+    else:
+        for i, user in enumerate(users, start=1):
+            print(f"{i}. {user.firstNAME} {user.lastNAME} (id={user.pID})")
+            print("user:", user)
+
+def printAllPersons(session: Session):
+    SQL_QUERY = select(Person)
+    users = session.scalars(SQL_QUERY)
+    print("\nAll users:")
+    counter = 0
+    for user in users:
+        print(user)
+        counter += 1
+
+    #print("Number of users: ", counter)
+
+def printAllAccounts(session: Session):
+    SQL_QUERY = select(Account)
+    accounts = session.scalars(SQL_QUERY)
+    print("\nAll accounts:")
+    counter = 0
+    for account in accounts:
+        print(account)
+        counter += 1
+
+    #print("Number of accounts: ", counter)
+
+def printCharacters(session: Session):
+    counter = 0
+    for char in session.scalars(select(Character)):
+        if counter == 0:
+            print("\n\n")
+        counter += 1
+        print(char)
+    print("\n\n")
 
 if __name__ == "__main__":
     # Only runs if you call python SQLIntegration.py directly
     #seedKevin()
-    #print(getServerInfo())
-    #manualAddPerson()
     session = connectDatabase()
-    SQL_QUERY = select(Person)
-    user = session.scalars(SQL_QUERY).one()
-    print("user:", user)
+    person = linkAccountToPerson("testAccount", session)
+    print(person)
+    printAllPersons(session)
+    printAllAccounts(session)
     session.close()
     pass
 
