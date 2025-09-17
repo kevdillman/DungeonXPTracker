@@ -105,28 +105,65 @@ dungeonFrame:SetScript("OnEvent",
         function SlashCmdList.DUNGEONXPTRACKER(msg)
             -- output for default /xpt command and /xpt last
             -- prints the contents of dungeonRun
-            if (msg == "" or msg == "last") then
-                printXPValues()
+
+            -- default choice, prints available commands
+            if (string.lower(msg) == "" or string.lower(msg) == "help") then
+                print("Commands List:")
+                print("close - Closes all open XPT windows")
+                print("current - Prints the current character information")
+                print("demo - Displays the dungeon info window and the raw data windows")
+                print("guild - Prints the current character information to guild chat")
+                print("info - Prints values from the GetInstanceInfo()")
+                print("last - Prints values from the last instance run")
+                print("window - Display window with information about dungeon runs")
+            end
+
+            -- command /xpt close
+            -- closes all open windows
+            if (string.lower(msg) == "close") then
+                -- close the info window
+                if dungeonInfoWindow then
+                    dungeonInfoWindow:Hide()
+                end
+
+                -- close the raw data window
+                if dungeonInfoWindowRaw then
+                    dungeonInfoWindowRaw:Hide()
+                end
             end
 
             -- command /xpt current
             -- prints the current character values
-            if (msg == "current") then
+            if (string.lower(msg) == "current") then
                 printCurrentStats()
 
                 --print("class is: ", playerClass)
             end
 
+            -- command /xpt demo
+            -- displays the dungeon info window and the raw data windows
+            if (string.lower(msg) == "demo") then
+                print("xpt window demo")
+                if dungeonInfoWindow == nil then
+                    createDungeonWindow()
+                end
+                dungeonInfoWindow:Show()
+                if dungeonInfoWindowRaw == nil then
+                    createRawDungeonWindow()
+                end
+                dungeonInfoWindowRaw:Show()
+            end
+
             -- command /xpt guild
             -- prints the current character values to guild chat
-            if (msg == "guild") then
+            if (string.lower(msg) == "guild") then
                 -- SendChatMessage("guild test",'GUILD')
                 printCurrentStatsGuild()
             end
 
             -- command /xpt info
             -- prints the current dungeon info
-            if (msg == "info") then
+            if (string.lower(msg) == "info") then
                 -- msg = dungeonOutputRaw(GetInstanceInfo())
                 local name, type, diffNum, diffTxt, maxPlayers, dynamicDifficulty, isDynamic, instanceMapID, lfgID = GetInstanceInfo()
 
@@ -143,9 +180,15 @@ dungeonFrame:SetScript("OnEvent",
 
             end
 
+            -- command /xpt last
+            -- shows values from last run
+            if (string.lower(msg) == "last") then
+                printXPValues()
+            end
+
             -- command /xpt window
             -- display window with information about dungeon runs
-            if (msg == "window") then
+            if (string.lower(msg) == "window") then
                 print("xpt window creates a window")
                 if dungeonInfoWindow == nil then
                     createDungeonWindow()
@@ -153,33 +196,6 @@ dungeonFrame:SetScript("OnEvent",
                 dungeonInfoWindow:Show()
             end
 
-            -- command /xpt demo
-            -- displays the dungeon info window and the raw data windows
-            if (msg == "demo") then
-                print("xpt window demo")
-                if dungeonInfoWindow == nil then
-                    createDungeonWindow()
-                end
-                dungeonInfoWindow:Show()
-                if dungeonInfoWindowRaw == nil then
-                    createRawDungeonWindow()
-                end
-                dungeonInfoWindowRaw:Show()
-            end
-
-            -- command /xpt close
-            -- closes all open windows
-            if (msg == "close") then
-                -- close the info window
-                if dungeonInfoWindow then
-                    dungeonInfoWindow:Hide()
-                end
-
-                -- close the raw data window
-                if dungeonInfoWindowRaw then
-                    dungeonInfoWindowRaw:Hide()
-                end
-            end
         end
 
         -- on addon load checks saved variable
