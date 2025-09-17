@@ -117,7 +117,7 @@ def addData(accountName: str, parsedData = None):
         accountChoice = input("No account found, would you like to create one Y/N: ")
         if accountChoice != "Y":
             return
-        account = addAccount(accountName, person, session)
+        account = addAccount(accountName, session, person)
         print("Account info: ", account)
 
     # --- 3. Add any new characters for this account ---
@@ -169,7 +169,7 @@ def linkAccountToPerson(accountName, session: Session):
 
         return person
 
-def addAccount(accountName, person: Person, session: Session):
+def addAccount(accountName, session: Session, person: Person):
     """
     @brief Add a new WoW account for the given Person.
     @param accountName WoW account name.
