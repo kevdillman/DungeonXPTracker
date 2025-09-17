@@ -37,7 +37,8 @@ local dungeonRun = {
     charName = "a",
     charRace = "a",
     charRole = "a",
-    charClass = "a"
+    charClass = "a",
+    charRealm = "a"
 }
 
 -- upon load checks state to determine dungeon tracking
@@ -356,12 +357,15 @@ end
 
 -- prints the current XP, time, and zone information
 function printCurrentStats()
-    local name, temp = UnitName("player")
+    local name, temp1 = UnitName("player")
     local race, temp1, temp2 = UnitRace("player")
     local playerClass, temp1, temp2 = UnitClass("player")
+    local realm = GetRealmName()
+
     print("Your playing: ", name)
     print("Your current race: ", race)
     print("Your class is: ", playerClass)
+    print("Your realm is: ", realm)
     print("The current time is: ", date("%d/%m/%y %H:%M:%S"))
     print("Current XP is:", UnitXP("player"))
     print("Current rest XP is:", GetXPExhaustion())
@@ -481,13 +485,15 @@ end
 
 -- sets the starting XP, rest, and lvl of a dungeon
 function setStartXP()
-    local name, temp = UnitName("player")
+    local name, temp1 = UnitName("player")
     local race, temp1, temp2 = UnitRace("player")
     local playerClass, temp1, temp2 = UnitClass("player")
+    local realm = GetRealmName()
 
     dungeonRun.charName     = name
     dungeonRun.charRace     = race
     dungeonRun.charClass    = playerClass
+    dungeonRun.charRealm    = realm
     dungeonRun.startTime    = date("%d/%m/%y %H:%M:%S")
     dungeonRun.startXP      = UnitXP("player")
     dungeonRun.startRest    = getRestXP()
@@ -522,7 +528,8 @@ function setEndXP()
         charName    = dungeonRun.charName,
         charRace    = dungeonRun.charRace,
         charRole    = dungeonRun.charRole,
-        charClass   = dungeonRun.charClass
+        charClass   = dungeonRun.charClass,
+        charRealm   = dungeonRun.charRealm
     }
 
     table.insert(dungeonTracker.dungeons, dungeonInstance)
@@ -546,6 +553,7 @@ function flushTable()
         charRace = "a",
         charRole = "a",
         charClass = "a",
+        charRealm = "a",
     }
 end
 
