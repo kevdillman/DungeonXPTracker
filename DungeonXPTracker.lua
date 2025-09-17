@@ -36,7 +36,8 @@ local dungeonRun = {
     dungeon = "a",
     charName = "a",
     charRace = "a",
-    charRole = "a"
+    charRole = "a",
+    charClass = "a"
 }
 
 -- upon load checks state to determine dungeon tracking
@@ -93,6 +94,8 @@ dungeonFrame:SetScript("OnEvent",
             -- prints the current character values
             if (msg == "current") then
                 printCurrentStats()
+
+                --print("class is: ", playerClass)
             end
 
             -- command /xpt guild
@@ -355,8 +358,10 @@ end
 function printCurrentStats()
     local name, temp = UnitName("player")
     local race, temp1, temp2 = UnitRace("player")
+    local playerClass, temp1, temp2 = UnitClass("player")
     print("Your playing: ", name)
     print("Your current race: ", race)
+    print("Your class is: ", playerClass)
     print("The current time is: ", date("%d/%m/%y %H:%M:%S"))
     print("Current XP is:", UnitXP("player"))
     print("Current rest XP is:", GetXPExhaustion())
@@ -478,9 +483,11 @@ end
 function setStartXP()
     local name, temp = UnitName("player")
     local race, temp1, temp2 = UnitRace("player")
+    local playerClass, temp1, temp2 = UnitClass("player")
 
     dungeonRun.charName     = name
     dungeonRun.charRace     = race
+    dungeonRun.charClass    = playerClass
     dungeonRun.startTime    = date("%d/%m/%y %H:%M:%S")
     dungeonRun.startXP      = UnitXP("player")
     dungeonRun.startRest    = getRestXP()
@@ -514,7 +521,8 @@ function setEndXP()
         dungeon     = dungeonRun.dungeon,
         charName    = dungeonRun.charName,
         charRace    = dungeonRun.charRace,
-        charRole    = dungeonRun.charRole
+        charRole    = dungeonRun.charRole,
+        charClass   = dungeonRun.charClass
     }
 
     table.insert(dungeonTracker.dungeons, dungeonInstance)
@@ -536,7 +544,8 @@ function flushTable()
         dungeon = "a",
         charName = "a",
         charRace = "a",
-        charRole = "a"
+        charRole = "a",
+        charClass = "a",
     }
 end
 
