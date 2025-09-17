@@ -14,21 +14,26 @@ from models import Base, Person, Account, Character, Dungeon, DungeonRun, LevelR
 #print(pyodbc.drivers())
 
 def getServerInfo(fileData = Path('./sqlServerInfo.txt').read_text()):
-    # reads the SQL server connection information from sqlServerInfo.txt file
+    """
+    @brief Read SQL server connection information from a credentials file.
+    @param fileData Contents of sqlServerInfo.txt (defaults to reading from disk).
+    @return dict of connection fields on success, or 1 on error.
+    """
+
+    fields = {"userName": "user",
+            "password": "pass",
+            "hostName": "host",
+            "hostPort": "port",
+            "dbName": "db",
+            ",": ""}
 
     # make sure required fields are in credential file
-    fields = {"userName": "user",
-              "password": "pass",
-              "hostName": "host",
-              "hostPort": "port",
-              "dbName": "db",
-              ",": ""}
-
     for field in fields:
         if fileData.find(field) == -1:
             print(field, " missing in sqlServerInfo.txt")
             return 1
 
+    # fill field information
     for field in fields:
         # end loop after last field is filled
         if field != ",":
@@ -57,9 +62,13 @@ def getServerInfo(fileData = Path('./sqlServerInfo.txt').read_text()):
 
     return fields
 
-def connectDatabase():
-    # load the database connection info
-    serverCredentials = getServerInfo()
+def connectDatabase(fileData = Path('./sqlServerInfo.txt').read_text()):
+    """
+    @brief Establish a database connection and create a SQLAlchemy session.
+    @return Session object connected to the configured database.
+    """
+
+    serverCredentials = getServerInfo(fileData)
     userName = serverCredentials["userName"]
     password = serverCredentials["password"]
     hostName = serverCredentials["hostName"]
@@ -121,6 +130,13 @@ def addData(accountName: str, parsedData = None):
     session.close()
 
 def linkAccountToPerson(accountName, session: Session):
+    """
+    @brief Link a WoW account to a Person record in the database.
+    @param accountName The WoW account name to search for.
+    @param session Active SQLAlchemy session.
+    @return Person object if found/linked, False if no link was made.
+    """
+
     # finds the person record associated with the given accountName
     person = session.scalars(select(Person).where(Person.accounts.any(Account.wowACCOUNT == accountName))).first()
 
@@ -154,6 +170,14 @@ def linkAccountToPerson(accountName, session: Session):
         return person
 
 def addAccount(accountName, person: Person, session: Session):
+    """
+    @brief Add a new WoW account for the given Person.
+    @param accountName WoW account name.
+    @param person Person object to associate account with.
+    @param session Active SQLAlchemy session.
+    @return The created Account object.
+    """
+
     bName = input("bnet name: ")
     account = Account(
         wowACCOUNT=accountName,
@@ -255,10 +279,17 @@ def manualAddAccount():
     session.commit()
 
 def searchPerson(session: Session):
+    """
+    @brief Search for a Person by first and last name.
+    @param session Active SQLAlchemy session.
+    @return Matching Person object, False if no results found.
+    """
+
     # search the person table for a match by first and last name
     searchFirstName = input("First name of user you want to search for: ")
     searchLastName = input("Last name of the user you want to search for: ")
     users = session.scalars(select(Person).where(Person.firstNAME == searchFirstName).where(Person.lastNAME == searchLastName)).all()
+
     # search on just first name
     #users = session.scalars(select(Person).where(Person.firstNAME == searchFirstName)).all()
 
@@ -277,7 +308,14 @@ def searchPerson(session: Session):
         return person
 
 def selectPerson(session: Session, people: Person = None):
-    # select a person by their pID
+    """
+    @brief Select a Person by ID, either from a given list or database lookup.
+    @param session Active SQLAlchemy session.
+    @param people Optional list of Person objects to search within.
+    @return Selected Person object, or False if not found.
+    """
+
+    # select a person from the provided people
     searchUserID = input("ID of user you want to associate account with: ")
     if people:
         for i, person in enumerate(people, start=1):
@@ -288,6 +326,7 @@ def selectPerson(session: Session, people: Person = None):
         print("No user found with given ID")
         return False
 
+    # if no people provided search database for a pID match
     if (searchUserID.isdecimal()) and (int(searchUserID) >= 0):
         person = session.scalars(select(Person).where(Person.pID == searchUserID)).first()
         if person:
@@ -298,7 +337,14 @@ def selectPerson(session: Session, people: Person = None):
             return False
 
 def findUniqueCharacters(parsedData):
-    # searches for unique characters
+    """
+    @brief Extract unique characters from parsed data.
+    @param parsedData pd.DataFrame containing dungeon run information.
+    @return tuple (uniqueChars, uniqueCharKeys)
+            - uniqueChars: list of character dicts
+            - uniqueCharKeys: list of (name, race) tuples
+    """
+
     uniqueCharKeys = []
     uniqueChars = []
     character = {
@@ -335,12 +381,14 @@ def findUniqueCharacters(parsedData):
         "Mechagnome": "Alliance",
     }
 
+    # search for unique characters in parsedData
     for i in range(len(parsedData)):
         # create a composite key to check of character name and race
         charName = parsedData['charName'].iloc[i]
         charRace = parsedData['charRace'].iloc[i]
         checkKey = (charName, charRace)
 
+        # if character from current row hasn't been found yet add them
         if checkKey not in uniqueCharKeys:
             uniqueCharKeys.append(checkKey)
 
@@ -396,30 +444,8 @@ def printCharacters(session: Session):
 if __name__ == "__main__":
     # Only runs if you call python SQLIntegration.py directly
     #session = connectDatabase()
-    #person = linkAccountToPerson("testAccount", session)
-    #print("found person is: ", person)
-    #printAllPersons(session)
-    #printAllAccounts(session)
     #session.close()
 
     addData("testAccount")
 
     pass
-
-#printCharacters()
-
-# creates connection to pyodbc database
-#connectionString = f'DRIVER={{ODBC Driver 18 for SQL Server}};ADDRESS={hostNamePort};UID={userName};PWD={password};DATABASE={dbName};TrustServerCertificate=YES'
-#conn = pyodbc.connect(connectionString)
-
-#cursor = conn.cursor()
-#cursor.execute(SQL_QUERY)
-
-"""
-SQL_QUERY = select(Person).where(Person.pextID == "DEATHKRON")
-user = session.scalars(SQL_QUERY).one()
-print("user:", user)
-print("current middle name: ", user.middleNAME)
-user.middleNAME = "C"
-print("update name:", user.middleNAME)
-session.commit() """
