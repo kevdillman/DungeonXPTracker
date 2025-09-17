@@ -73,7 +73,7 @@ def connectDatabase():
     engine.connect()
     print("creating session")
     session = Session(engine)
-    print("session created")
+    print("session created\n")
     return session
 
 def addData(accountName: str, parsedData = None):
@@ -98,12 +98,12 @@ def addData(accountName: str, parsedData = None):
         print("No Person linked to account")
         return
     else:
-        print("Account linked to Person: ", person)
+        print(f"Account linked to Person: {person}\n")
 
     # Step 2: find or create account
     account = session.scalars(select(Account).where(Account.wowACCOUNT == accountName)).first()
     if account:
-        print("Account info: ", account)
+        print(f"Account info: {account}\n")
     else:
         accountChoice = input("No account found, would you like to create one Y/N: ")
         if accountChoice != "Y":
@@ -112,6 +112,7 @@ def addData(accountName: str, parsedData = None):
         print("Account info: ", account)
 
     # --- 3. Add any new characters for this account ---
+    print("Number of dungeon runs found:", len(parsedData))
     addCharacters(account, parsedData, session)
 
     # --- 4. TODO: Add dungeon run or level history handling here ---
@@ -164,41 +165,56 @@ def addAccount(accountName, person: Person, session: Session):
     return account
 
 def addCharacters(account: Account, parsedData, session: Session):
-    print("length parsed data:", len(parsedData))
+    """
+    @brief Add new characters from parsed data to the database.
 
+    @param account Account object to link characters to.
+    @param parsedData pd.DataFrame containing parsed character data.
+    @param session SQLAlchemy session for database interaction.
+
+    @details Finds unique (name, race) character pairs in the parsed data.
+             Adds any missing characters to the database under the given account.
+             Commits only if new characters were added.
+    """
+
+    # find each character in the parsed data file
     uniqueChars, uniqueCharKeys = findUniqueCharacters(parsedData)
-    print("num unique chars found:", len(uniqueChars))
-
-    print("Unique chars found:")
-    for value in sorted(uniqueCharKeys, key=lambda x: x[0]):
-        print(value)
-
-    print(uniqueChars[27])
+    print(f"Number of unique characters found: {len(uniqueChars)}\n")
 
     # add the character(s) to the database
-    addAllChars = False
-    if addAllChars:
 
-        # compile list of characters in database already
-        charsInDatabase = []
-        for char in session.scalars(select(Character)):
-            charsInDatabase.append(char.cNAME)
 
-        # any characters not in the database add them
-        for i in range(len(uniqueChars)):
-            if uniqueChars[i]['name'] not in charsInDatabase:
-                newChar = Character(
-                    cNAME = uniqueChars[i]['name'],
-                    cREALM = uniqueChars[i]['realm'],
-                    cFACTION = uniqueChars[i]['faction'],
-                    cRACE = uniqueChars[i]['race'],
-                    cGUILD = uniqueChars[i]['guild'],
-                    accountID = account.aID
-                )
+    # compile list of characters in database already
+    charsInDatabase = []
+    characters = session.scalars(select(Character))
+    if characters:
+        for char in characters:
+            charName = char.cNAME
+            charRace = char.cRACE
+            charKey = (charName, charRace)
+            charsInDatabase.append(charKey)
 
-        print("Chars in database:", charsInDatabase)
-        user = session.scalars(select(Account).where(Account.wowACCOUNT == "DEATHKRON")).one()
-        user.characters.append(newChar)
+    else:
+        print("No characters in database")
+
+    # any characters not in the database create them
+    charAdded = False
+    for char in uniqueChars:
+        if (char['name'], char['race']) not in charsInDatabase:
+            charAdded = True
+            newChar = Character(
+                cNAME = char['name'],
+                cREALM = char['realm'],
+                cFACTION = char['faction'],
+                cRACE = char['race'],
+                cGUILD = char['guild'],
+                accountID = account.aID
+            )
+            account.characters.append(newChar)
+            print("adding new character:", newChar)
+
+    # if any new characters were created add them to database
+    if charAdded:
         session.commit()
 
 def manualAddPerson(session: Session):
