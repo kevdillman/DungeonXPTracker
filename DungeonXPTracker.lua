@@ -8,6 +8,7 @@ local dungeonFrame = CreateFrame("Frame")
     dungeonFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     dungeonFrame:RegisterEvent("GROUP_LEFT")
     dungeonFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+    dungeonFrame:RegisterEvent("SCENARIO_UPDATE")
 
 -- setup the window style
 local backdropInfo = {
@@ -22,6 +23,7 @@ local backdropInfo = {
 
 local inDungeon = false
 local areaCheck = false
+local inDelve = false
 local dungeonRun = {
     startTime = 0,
     endingTime = 0,
@@ -47,9 +49,23 @@ local dungeonRun = {
 dungeonFrame:SetScript("OnEvent",
     function(self, event, ...)
 
-        -- initial entry to dungeon
+        -- check for entry to a delve
+        if (event == "SCENARIO_UPDATE" and IsInInstance() and (C_Scenario.GetInfo() == "Delves") and not inDelve) then
+            print("In a Delve!")
+            instanceName = GetInstanceInfo()
+            difficulty = C_UIWidgetManager.GetScenarioHeaderDelvesWidgetVisualizationInfo(6183).tierText
+            print("In", instanceName, "at tier", difficulty)
+            --printCurrentStats()
+            --print("IsInInstance info: ", IsInInstance())
+            --print("\nC_Scenario.GetInfo(): ", C_Scenario.GetInfo())
+            --print("\nGetInstanceInfo(): ", GetInstanceInfo())
+            --print("\ndelve tier: ", C_UIWidgetManager.GetScenarioHeaderDelvesWidgetVisualizationInfo(6183).tierText)
+
+        end
+
+        -- check for initial entry to dungeon
         if (event == "PLAYER_ENTERING_WORLD" and IsInInstance() and not inDungeon) then
-            print("In an instance group! :-D")
+            print("In a dungeon group! :-D")
             flushTable()
             printCurrentStats()
             inDungeon = true
