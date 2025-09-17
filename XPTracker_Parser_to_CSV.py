@@ -3,6 +3,7 @@
 # v0.1 by PuggyBerra and Squealz
 # 12 Feb 2024
 
+import sys
 import pandas as pd
 import numpy as np
 from datetime import date
@@ -87,6 +88,13 @@ def getPaths(pathsDoc):
 if __name__ == '__main__':
     # read the path to the saved variables file and the account
     # folders to parse, as well as display names for the account if desired
+
+    # check if parser should export data to SQL database
+    SQLExport = False
+    for arg in sys.argv:
+        if arg == "SQL" or arg == "sql":
+            SQLExport = True
+
     fileData = Path('./path.txt').read_text()
     accounts, savedVarsPath = getPaths(fileData)
     accountCount = len(accounts)
@@ -109,7 +117,7 @@ if __name__ == '__main__':
         print("exported:", accounts[i][accountDisplayName] + "_dungeonData.csv")
 
         # add data to SQL Database
-        if accounts[i][accountDisplayName] == "DEATHKRON":
+        if accounts[i][accountDisplayName] == "DEATHKRON" and SQLExport:
             addData(accounts[i][accountDisplayName], lvlingData)
 
     print("Parsing Complete")
