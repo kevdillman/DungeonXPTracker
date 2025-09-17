@@ -36,7 +36,11 @@ local dungeonRun = {
     dungeon = "a",
     charName = "a",
     charRace = "a",
-    charRole = "a"
+    charRole = "a",
+    charClass = "a",
+    charRealm = "a",
+    charGuild = "a",
+    guildRealm = "a",
 }
 
 -- upon load checks state to determine dungeon tracking
@@ -93,6 +97,8 @@ dungeonFrame:SetScript("OnEvent",
             -- prints the current character values
             if (msg == "current") then
                 printCurrentStats()
+
+                --print("class is: ", playerClass)
             end
 
             -- command /xpt guild
@@ -372,10 +378,18 @@ end
 
 -- prints the current XP, time, and zone information
 function printCurrentStats()
-    local name, temp = UnitName("player")
-    local race, temp1, temp2 = UnitRace("player")
+    local name, _ = UnitName("player")
+    local race, _, _ = UnitRace("player")
+    local playerClass, _, _ = UnitClass("player")
+    local realm = GetRealmName()
+    local guildName, _, _, guildRealm = GetGuildInfo("player")
+
     print("Your playing: ", name)
     print("Your current race: ", race)
+    print("Your class is: ", playerClass)
+    print("Your realm is: ", realm)
+    print("Your guild is: ", guildName)
+    print("Your guild's realm is: ", guildRealm)
     print("The current time is: ", date("%d/%m/%y %H:%M:%S"))
     print("Current XP is:", UnitXP("player"))
     print("Current rest XP is:", GetXPExhaustion())
@@ -495,11 +509,18 @@ end
 
 -- sets the starting XP, rest, and lvl of a dungeon
 function setStartXP()
-    local name, temp = UnitName("player")
+    local name, temp1 = UnitName("player")
     local race, temp1, temp2 = UnitRace("player")
+    local playerClass, temp1, temp2 = UnitClass("player")
+    local realm = GetRealmName()
+    local guildName, _, _, guildRealm = GetGuildInfo("player")
 
     dungeonRun.charName     = name
     dungeonRun.charRace     = race
+    dungeonRun.charClass    = playerClass
+    dungeonRun.charRealm    = realm
+    dungeonRun.charGuild    = guildName
+    dungeonRun.guildRealm   = guildRealm
     dungeonRun.startTime    = date("%d/%m/%y %H:%M:%S")
     dungeonRun.startXP      = UnitXP("player")
     dungeonRun.startRest    = getRestXP()
@@ -533,7 +554,11 @@ function setEndXP()
         dungeon     = dungeonRun.dungeon,
         charName    = dungeonRun.charName,
         charRace    = dungeonRun.charRace,
-        charRole    = dungeonRun.charRole
+        charRole    = dungeonRun.charRole,
+        charClass   = dungeonRun.charClass,
+        charRealm   = dungeonRun.charRealm,
+        charGuild   = dungeonRun.charGuild,
+        guildRealm  = dungeonRun.guildRealm,
     }
 
     table.insert(dungeonTracker.dungeons, dungeonInstance)
@@ -555,7 +580,11 @@ function flushTable()
         dungeon = "a",
         charName = "a",
         charRace = "a",
-        charRole = "a"
+        charRole = "a",
+        charClass = "a",
+        charRealm = "a",
+        charGuild = "a",
+        guildRealm = "a",
     }
 end
 
