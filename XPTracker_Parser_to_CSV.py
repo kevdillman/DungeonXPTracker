@@ -84,7 +84,7 @@ def getPaths(pathsDoc):
 
     return accounts, savedVarsPath
 
-def main():
+if __name__ == '__main__':
     # read the path to the saved variables file and the account
     # folders to parse, as well as display names for the account if desired
     fileData = Path('./path.txt').read_text()
@@ -113,6 +113,3 @@ def main():
             addData(accounts[i][accountDisplayName], lvlingData)
 
     print("Parsing Complete")
-
-if __name__ == '__main__':
-    main()
