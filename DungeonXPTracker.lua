@@ -378,13 +378,6 @@ function setWindowTextFormat(window)
 end
 
 -- sets the text string of a window
-function setDynamicWindowText(window, text)
-    displayText = ""
-    displayText = text
-    window:SetText(displayText)
-end
-
--- sets the text string of a window
 function setWindowText(window, text)
     displayText = ""
     displayText = displayText .. "Last Dungeon run:\n" .. dungeonOutput(dungeonTracker.dungeons[#dungeonTracker.dungeons - 1])
