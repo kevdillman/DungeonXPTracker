@@ -21,9 +21,8 @@ local backdropInfo = {
     insets = {left = 3, right = 3, top = 4, bottom = 4}
 }
 
-local inDungeon = false
+local inInstance = false
 local areaCheck = false
-local inDelve = false
 local dungeonRun = {
     startTime = 0,
     endingTime = 0,
@@ -35,8 +34,9 @@ local dungeonRun = {
     endingXP = 0,
     endingRest = 0,
     endingMoney = 0,
-    dungeon = "a",
+    instanceName = "a",
     instanceType = "a",
+    instanceDiff = 0,
     charName = "a",
     charRace = "a",
     charRole = "a",
@@ -51,54 +51,60 @@ dungeonFrame:SetScript("OnEvent",
     function(self, event, ...)
 
         -- check for entry to a delve
-        if (event == "SCENARIO_UPDATE" and IsInInstance() and (C_Scenario.GetInfo() == "Delves") and not inDelve) then
+        if (event == "SCENARIO_UPDATE" and IsInInstance() and (C_Scenario.GetInfo() == "Delves") and not inInstance) then
             print("In a Delve!")
             instanceName = GetInstanceInfo()
             difficulty = C_UIWidgetManager.GetScenarioHeaderDelvesWidgetVisualizationInfo(6183).tierText
             print("In", instanceName, "at tier", difficulty)
-            --printCurrentStats()
-            --print("IsInInstance info: ", IsInInstance())
-            --print("\nC_Scenario.GetInfo(): ", C_Scenario.GetInfo())
-            --print("\nGetInstanceInfo(): ", GetInstanceInfo())
-            --print("\ndelve tier: ", C_UIWidgetManager.GetScenarioHeaderDelvesWidgetVisualizationInfo(6183).tierText)
+            inInstance = true
+            flushTable()
+            printCurrentStats()
+            setStartXP()
 
         end
 
         -- check for initial entry to dungeon
-        if (event == "PLAYER_ENTERING_WORLD" and IsInInstance() and not inDungeon) then
+        if (event == "PLAYER_ENTERING_WORLD" and IsInInstance() and not inInstance) then
+            -- probably need to add check for if in a delve to not lose data
+            inInstance = true
             print("In a dungeon group! :-D")
             flushTable()
             printCurrentStats()
-            inDungeon = true
             setStartXP()
         end
 
         -- left LFD dungeon from within dungeon
-        if (event == "GROUP_LEFT" and IsInInstance() and inDungeon) then
+        if (event == "GROUP_LEFT" and IsInInstance() and inInstance) then
             print("Left the group in an instance")
-            inDungeon = false
-            setEndXP()
-            printXPValues()
+                inInstance = false
+                setEndXP()
+                printXPValues()
         end
 
         -- left LFD dungeon outside dungeon
-        if (event == "GROUP_LEFT" and not IsInInstance() and inDungeon) then
+        if (event == "GROUP_LEFT" and not IsInInstance() and inInstance) then
             print("Left the group outside instance")
-            inDungeon = false
-            setEndXP()
-            printXPValues()
+                inInstance = false
+                setEndXP()
+                printXPValues()
         end
 
         -- on first time in combat records values that may not be loaded earlier
-        if (event == "PLAYER_REGEN_DISABLED" and not areaCheck and inDungeon) then
-            if getZone() ~= dungeonRun.dungeon then
-                dungeonRun.dungeon  = getZone()
-                _, dungeonRun.instanceType = IsInInstance()
-                dungeonRun.charRole = UnitGroupRolesAssigned("player")
-            end
+        if (event == "PLAYER_REGEN_DISABLED" and not areaCheck and inInstance) then
+            dungeonRun.instanceName  = getZone()
+            _, dungeonRun.instanceType = IsInInstance()
+            _, _, dungeonRun.instanceDiff = GetInstanceInfo()
 
-            print("You're currently in: ", dungeonRun.dungeon)
+            -- if the instance is a scenario check if delve and fill instanceType
+            if string.lower(dungeonRun.instanceType) == "scenario" and (string.lower(C_Scenario.GetInfo()) == "delves") then
+                dungeonRun.instanceType = C_Scenario.GetInfo()
+                dungeonRun.instanceDiff = C_UIWidgetManager.GetScenarioHeaderDelvesWidgetVisualizationInfo(6183).tierText
+            end
+            dungeonRun.charRole = UnitGroupRolesAssigned("player")
+
+            print("You're currently in: ", dungeonRun.instanceName)
             print("The instance type is: ", dungeonRun.instanceType)
+            print("Your instance difficulty is: ", dungeonRun.instanceDiff)
             print("Role: ", dungeonRun.charRole)
             areaCheck = true
         end
@@ -181,7 +187,6 @@ dungeonFrame:SetScript("OnEvent",
             -- command /xpt guild
             -- prints the current character values to guild chat
             if (string.lower(msg) == "guild") then
-                -- SendChatMessage("guild test",'GUILD')
                 printCurrentStatsGuild()
             end
 
@@ -217,8 +222,17 @@ dungeonFrame:SetScript("OnEvent",
                     createTextWindow("testWindow")
                 end
 
-                text = dump(C_UIWidgetManager.GetScenarioHeaderDelvesWidgetVisualizationInfo(6183))
+                --text = dump(C_UIWidgetManager.GetScenarioHeaderDelvesWidgetVisualizationInfo(6183))
                 --text = "[this is a silly test string,"
+                local instance1, instance2 = GetInstanceInfo()
+                local scenario = C_Scenario.GetInfo()
+                local text = "instance1: " .. instance1 .. "\n" ..
+                            "instance2: " .. instance2 .. "\n" ..
+                            "scenario: " .. scenario .. "\n" ..
+                            "dungeonRun.instanceType: " .. dungeonRun.instanceType .. "\n"..
+                            "areaCheck: " .. tostring(areaCheck) .. "\n" ..
+                            "dungeonRun.instanceDiff: " .. dungeonRun.instanceDiff
+
                 testWindow:SetText(text)
                 testWindow:Show()
             end
@@ -477,8 +491,9 @@ function dungeonOutput(dungeonTable)
         "Realm: " .. dungeonTable.charRealm .. "\n" ..
         "Guild: " .. dungeonTable.charGuild .. "\n" ..
         "Guild's Realm: " .. dungeonTable.guildRealm .. "\n" ..
-        "Dungeon: " .. dungeonTable.dungeon .. "\n" ..
+        "Instance: " .. dungeonTable.instanceName .. "\n" ..
         "Instance Type: " .. dungeonTable.instanceType .. "\n" ..
+        "Instance difficulty: " .. dungeonTable.instanceDiff .. "\n" ..
         "Role: " .. dungeonTable.charRole .. "\n" ..
         "Start level: " .. dungeonTable.startLVL .. "\n" ..
         "Start XP: " .. dungeonTable.startXP .. "\n" ..
@@ -525,8 +540,9 @@ function setStartXP()
     dungeonRun.startRest    = getRestXP()
     dungeonRun.startLVL     = UnitLevel("player")
     dungeonRun.startMoney   = math.floor((GetMoney()/10000))
-    dungeonRun.dungeon      = ""
+    dungeonRun.instanceName = ""
     dungeonRun.instanceType = ""
+    dungeonRun.instanceDiff = ""
     dungeonRun.charRole     = "" --UnitGroupRolesAssigned("player")
     areaCheck               = false
 end
@@ -551,8 +567,9 @@ function setEndXP()
         endingXP    = dungeonRun.endingXP,
         endingRest  = dungeonRun.endingRest,
         endingMoney = dungeonRun.endingMoney,
-        dungeon     = dungeonRun.dungeon,
+        instanceName= dungeonRun.instanceName,
         instanceType= dungeonRun.instanceType,
+        instanceDiff= dungeonRun.instanceDiff,
         charName    = dungeonRun.charName,
         charRace    = dungeonRun.charRace,
         charRole    = dungeonRun.charRole,
@@ -578,8 +595,9 @@ function flushTable()
         endingXP = 0,
         endingRest = 0,
         endingMoney = 0,
-        dungeon = "a",
+        instanceName = "a",
         instanceType = "a",
+        instanceDiff = 0,
         charName = "a",
         charRace = "a",
         charRole = "a",
@@ -597,6 +615,6 @@ function printXPValues()
     print("Start Rest: ",    dungeonRun.startRest,  "  End Rest: ",  dungeonRun.endingRest)
     print("Start LvL: ",     dungeonRun.startLVL,   "  End LvL: ",   dungeonRun.endingLVL)
     print("Start gold: ",    dungeonRun.startMoney, "  End gold: ",  dungeonRun.endingMoney)
-    print("Dungeon: ",       dungeonRun.dungeon)
+    print("Dungeon: ",       dungeonRun.instanceName)
     print("Role: ",          dungeonRun.charRole)
 end
