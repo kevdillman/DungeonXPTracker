@@ -392,19 +392,32 @@ function printCurrentStats()
     local playerClass, _, _ = UnitClass("player")
     local realm = GetRealmName()
     local guildName, _, _, guildRealm = GetGuildInfo("player")
+    local _, instanceType = IsInInstance()
+    local _, _, instanceDiff = GetInstanceInfo()
+
+    -- if the instance is a scenario check if delve and fill instanceType
+    if string.lower(instanceType) == "scenario" and (string.lower(C_Scenario.GetInfo()) == "delves") then
+        instanceType = C_Scenario.GetInfo()
+        instanceDiff = C_UIWidgetManager.GetScenarioHeaderDelvesWidgetVisualizationInfo(6183).tierText
+    end
+    charRole = UnitGroupRolesAssigned("player")
 
     print("Your playing: ", name)
     print("Your current race: ", race)
     print("Your class is: ", playerClass)
+    print("Your role is:", charRole)
     print("Your realm is: ", realm)
     print("Your guild is: ", guildName)
     print("Your guild's realm is: ", guildRealm)
     print("The current time is: ", date("%d/%m/%y %H:%M:%S"))
     print("Current XP is:", UnitXP("player"))
     print("Current rest XP is:", GetXPExhaustion())
+    print("Your current lvl is:", UnitLevel("player"))
     print("Current max lvl XP is:", UnitXPMax("player"))
-    print("Current gold: ", math.floor((GetMoney()/10000)))
-    print ("You're currently in: ", getZone())
+    print("Current gold:", math.floor((GetMoney()/10000)))
+    print("You're currently in:", getZone())
+    print("Your instance type is:", instanceType)
+    print("Your instance diff is:", instanceDiff)
 end
 
 -- prints current stats in guild chat
@@ -480,32 +493,32 @@ end
 -- return a pretty string of the information in the dungeon table
 function dungeonOutput(dungeonTable)
     local prettyString = ""
-    for key,value in pairs(dungeonTable) do
+    --[[for key,value in pairs(dungeonTable) do
         key = key
-        prettyString = prettyString .. key ..'   =   ' .. tostring(value) .. '\n'
-    end
+        prettyString = prettyString .. key ..': ' .. tostring(value) .. '\n'
+    end]]--
     prettyString =
-        "Name: " .. dungeonTable.charName .. "\n" ..
-        "Race: " .. dungeonTable.charRace .. "\n" ..
-        "Class: " .. dungeonTable.charClass .. "\n" ..
-        "Realm: " .. dungeonTable.charRealm .. "\n" ..
-        "Guild: " .. dungeonTable.charGuild .. "\n" ..
-        "Guild's Realm: " .. dungeonTable.guildRealm .. "\n" ..
-        "Instance: " .. dungeonTable.instanceName .. "\n" ..
-        "Instance Type: " .. dungeonTable.instanceType .. "\n" ..
-        "Instance difficulty: " .. dungeonTable.instanceDiff .. "\n" ..
-        "Role: " .. dungeonTable.charRole .. "\n" ..
-        "Start level: " .. dungeonTable.startLVL .. "\n" ..
-        "Start XP: " .. dungeonTable.startXP .. "\n" ..
-        "End level: " .. dungeonTable.endingLVL .. "\n" ..
-        "End XP: " .. dungeonTable.endingXP .. "\n" ..
-        "Start rest: " .. dungeonTable.startRest .. "\n" ..
-        "End rest: " .. dungeonTable.endingRest .. "\n" ..
-        "Start gold: " .. dungeonTable.startMoney .. "\n" ..
-        "End gold: " .. dungeonTable.endingMoney .. "\n" ..
-        "Gold gained: " .. dungeonTable.endingMoney - dungeonTable.startMoney .. "\n" ..
-        "Start time: " .. dungeonTable.startTime .. "\n" ..
-        "End time: " .. dungeonTable.endingTime
+        "Name: " ..                 dungeonTable.charName .. "\n" ..
+        "Race: " ..                 dungeonTable.charRace .. "\n" ..
+        "Class: " ..                dungeonTable.charClass .. "\n" ..
+        "Realm: " ..                dungeonTable.charRealm .. "\n" ..
+        "Guild: " ..                dungeonTable.charGuild .. "\n" ..
+        "Guild's Realm: " ..        dungeonTable.guildRealm .. "\n" ..
+        "Instance: " ..             dungeonTable.instanceName .. "\n" ..
+        "Instance Type: " ..        dungeonTable.instanceType .. "\n" ..
+        "Instance difficulty: " ..  dungeonTable.instanceDiff .. "\n" ..
+        "Role: " ..                 dungeonTable.charRole .. "\n" ..
+        "Start level: " ..          dungeonTable.startLVL .. "\n" ..
+        "Start XP: " ..             dungeonTable.startXP .. "\n" ..
+        "End level: " ..            dungeonTable.endingLVL .. "\n" ..
+        "End XP: " ..               dungeonTable.endingXP .. "\n" ..
+        "Start rest: " ..           dungeonTable.startRest .. "\n" ..
+        "End rest: " ..             dungeonTable.endingRest .. "\n" ..
+        "Start gold: " ..           dungeonTable.startMoney .. "\n" ..
+        "End gold: " ..             dungeonTable.endingMoney .. "\n" ..
+        "Gold gained: " ..          dungeonTable.endingMoney - dungeonTable.startMoney .. "\n" ..
+        "Start time: " ..           dungeonTable.startTime .. "\n" ..
+        "End time: " ..             dungeonTable.endingTime
 
     return prettyString
  end
