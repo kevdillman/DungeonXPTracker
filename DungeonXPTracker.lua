@@ -96,7 +96,7 @@ dungeonFrame:SetScript("OnEvent",
                 _, dungeonRun.instanceType = IsInInstance()
                 dungeonRun.charRole = UnitGroupRolesAssigned("player")
             end
-            --printZone()
+
             print("You're currently in: ", dungeonRun.dungeon)
             print("The instance type is: ", dungeonRun.instanceType)
             print("Role: ", dungeonRun.charRole)
@@ -146,8 +146,6 @@ dungeonFrame:SetScript("OnEvent",
             -- prints the current character values
             if (string.lower(msg) == "current") then
                 printCurrentStats()
-
-                --print("class is: ", playerClass)
             end
 
             -- command /xpt data
@@ -373,11 +371,6 @@ function setWindowTextFormat(window)
     return windowText
 end
 
--- prints the current zone
-function printZone()
-    print ("You're currently in: ", getZone())
-end
-
 -- prints the current XP, time, and zone information
 function printCurrentStats()
     local name, _ = UnitName("player")
@@ -397,7 +390,7 @@ function printCurrentStats()
     print("Current rest XP is:", GetXPExhaustion())
     print("Current max lvl XP is:", UnitXPMax("player"))
     print("Current gold: ", math.floor((GetMoney()/10000)))
-    printZone()
+    print ("You're currently in: ", getZone())
 end
 
 -- prints current stats in guild chat
