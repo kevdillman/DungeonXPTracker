@@ -65,7 +65,6 @@ dungeonFrame:SetScript("OnEvent",
 
         -- check for initial entry to dungeon
         if (event == "PLAYER_ENTERING_WORLD" and IsInInstance() and not inInstance) then
-            -- probably need to add check for if in a delve to not lose data
             inInstance = true
             print("In a dungeon group! :-D")
             flushTable()
@@ -121,12 +120,13 @@ dungeonFrame:SetScript("OnEvent",
                 print("Commands List:")
                 print("close - Closes all open XPT windows")
                 print("current - Prints the current character information")
-                print("data - Prints a pretty string of the recorded data")
+                print("data - Displays the current run's recorded data")
                 print("demo - Displays the dungeon info window and the raw data windows")
                 print("guild - Prints the current character information to guild chat")
-                print("info - Prints values from the GetInstanceInfo()")
+                print("info - Displays values from the getCurrentStats")
                 print("last - Prints values from the last instance run")
-                print("window - Display window with information about dungeon runs")
+                print("test - Displays the test window")
+                print("window - Display the dungeon info window")
             end
 
             -- command /xpt close
@@ -155,9 +155,15 @@ dungeonFrame:SetScript("OnEvent",
             end
 
             -- command /xpt data
-            -- prints a pretty string of the recorded data
+            -- Displays a pretty string of the currently recording data
             if (string.lower(msg) == "data") then
-               print(dungeonOutput(dungeonTracker.dungeons[#dungeonTracker.dungeons - 1]))
+                 if dataWindow == nil then
+                    createTextWindow("dataWindow", _, _, "Current run's data")
+                end
+                local windowText = dungeonOutput(dungeonRun)
+                dataWindow:SetText(windowText)
+                dataWindow:Show()
+
             end
 
             -- command /xpt demo
@@ -167,7 +173,7 @@ dungeonFrame:SetScript("OnEvent",
                 -- create pretty string windo
                 if dungeonInfoWindow == nil then
                     local windowName = "dungeonInfoWindow"
-                    createTextWindow(windowName)
+                    createTextWindow(windowName, _, _, "Last Completed Run")
                 end
                 local windowText = "Last Dungeon run:\n" .. dungeonOutput(dungeonTracker.dungeons[#dungeonTracker.dungeons - 1])
                 width, height = dungeonInfoWindow:SetText(windowText)
@@ -176,7 +182,7 @@ dungeonFrame:SetScript("OnEvent",
                 -- create raw data window
                 if dungeonInfoWindowRaw == nil then
                     local windowName = "dungeonInfoWindowRaw"
-                    createTextWindow(windowName, (width*1.1))
+                    createTextWindow(windowName, (width*1.1), _, "Last Completed Run")
                 end
 
                 windowText = "Last Dungeon run:\n" .. dungeonOutputRaw(dungeonTracker.dungeons[#dungeonTracker.dungeons - 1])
@@ -191,22 +197,14 @@ dungeonFrame:SetScript("OnEvent",
             end
 
             -- command /xpt info
-            -- prints the current dungeon info
+            -- shows the current collectable info in a window
             if (string.lower(msg) == "info") then
-                -- msg = dungeonOutputRaw(GetInstanceInfo())
-                local name, type, diffNum, diffTxt, maxPlayers, dynamicDifficulty, isDynamic, instanceMapID, lfgID = GetInstanceInfo()
-
-                print("contents: ")
-                print("name:", name)
-                print("type:", type)
-                print("diffNum:", diffNum)
-                print("diffTxt:", diffTxt)
-                print("maxPlayers:", maxPlayers)
-                print("dynamicDifficulty:", dynamicDifficulty)
-                print("isDynamic:", isDynamic)
-                print("instanceMapID:", instanceMapID)
-                print("lfgID:", lfgID)
-
+                if InfoWindow == nil then
+                    createTextWindow("InfoWindow", _, _, "Collectable Info")
+                end
+                local windowText = getCurrentStats()
+                InfoWindow:SetText(windowText)
+                InfoWindow:Show()
             end
 
             -- command /xpt last
@@ -243,7 +241,7 @@ dungeonFrame:SetScript("OnEvent",
                 print("xpt window creates a window")
                 if dungeonInfoWindow == nil then
                     local windowName = "dungeonInfoWindow"
-                    createTextWindow("dungeonInfoWindow")
+                    createTextWindow("dungeonInfoWindow", _, _, "Last Completed Run")
                 end
                 local windowText = "Last Dungeon run:\n" .. dungeonOutput(dungeonTracker.dungeons[#dungeonTracker.dungeons - 1])
                 dungeonInfoWindow:SetText(windowText)
@@ -281,9 +279,10 @@ dungeonFrame:SetScript("OnEvent",
 )
 
 -- create text window
-function createTextWindow(windowName, horizontalOffset, verticalOffset)
-    horizontalOffset = horizontalOffset or 0
-    verticalOffset = verticalOffset or 0
+function createTextWindow(windowName, horizontalOffset, verticalOffset, titleText)
+    local horizontalOffset = horizontalOffset or 0
+    local verticalOffset = verticalOffset or 0
+    local titleText = titleText or windowName
     local textWindow = CreateFrame("Frame", windowName, UIParent, "BackdropTemplate")
     -- BackdropTemplate has a internal border line of 4 pixels
     -- UIPanelButtonTemplate has a internal border of 2 pixels
@@ -306,7 +305,7 @@ function createTextWindow(windowName, horizontalOffset, verticalOffset)
     -- title:
     local textWindowTitle = textWindow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     textWindowTitle:SetPoint("TOP", 0, -10)
-    textWindowTitle:SetText("Test Window")
+    textWindowTitle:SetText(titleText)
     -- make the title easy to access:
     textWindow.Title = textWindowTitle
 
@@ -418,6 +417,43 @@ function printCurrentStats()
     print("You're currently in:", getZone())
     print("Your instance type is:", instanceType)
     print("Your instance diff is:", instanceDiff)
+end
+
+-- returns a string of the current XP, time, and zone information
+function getCurrentStats()
+    local name, _ = UnitName("player")
+    local race, _, _ = UnitRace("player")
+    local playerClass, _, _ = UnitClass("player")
+    local realm = GetRealmName()
+    local guildName, _, _, guildRealm = GetGuildInfo("player")
+    local _, instanceType = IsInInstance()
+    local _, _, instanceDiff = GetInstanceInfo()
+
+    -- if the instance is a scenario check if delve and fill instanceType
+    if string.lower(instanceType) == "scenario" and (string.lower(C_Scenario.GetInfo()) == "delves") then
+        instanceType = C_Scenario.GetInfo()
+        instanceDiff = C_UIWidgetManager.GetScenarioHeaderDelvesWidgetVisualizationInfo(6183).tierText
+    end
+    charRole = UnitGroupRolesAssigned("player")
+
+    local text = "Your playing: " .. name .. "\n"
+    .. "Your current race: " ..  race .. "\n"
+    .. "Your class is: " ..  playerClass .. "\n"
+    .. "Your role is:" ..  charRole .. "\n"
+    .. "Your realm is: " ..  realm .. "\n"
+    .. "Your guild is: " ..  guildName .. "\n"
+    .. "Your guild's realm is: " ..  guildRealm .. "\n"
+    .. "The current time is: " ..  date("%d/%m/%y %H:%M:%S") .. "\n"
+    .. "Current XP is:" ..  UnitXP("player") .. "\n"
+    .. "Current rest XP is:" ..  GetXPExhaustion() .. "\n"
+    .. "Your current lvl is:" ..  UnitLevel("player") .. "\n"
+    .. "Current max lvl XP is:" ..  UnitXPMax("player") .. "\n"
+    .. "Current gold:" ..  math.floor((GetMoney()/10000)) .. "\n"
+    .. "You're currently in:" ..  getZone() .. "\n"
+    .. "Your instance type is:" ..  instanceType .. "\n"
+    .. "Your instance diff is:" ..  instanceDiff .. "\n"
+
+    return text
 end
 
 -- prints current stats in guild chat
