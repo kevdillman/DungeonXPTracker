@@ -222,8 +222,8 @@ dungeonFrame:SetScript("OnEvent",
 
                 --text = dump(C_UIWidgetManager.GetScenarioHeaderDelvesWidgetVisualizationInfo(6183))
                 --text = "[this is a silly test string,"
-                local instance1, instance2 = GetInstanceInfo()
-                local scenario = C_Scenario.GetInfo()
+                local instance1, instance2 = GetInstanceInfo() or "No Data", "No Data"
+                local scenario = C_Scenario.GetInfo() or "No Data"
                 local text = "instance1: " .. instance1 .. "\n" ..
                             "instance2: " .. instance2 .. "\n" ..
                             "scenario: " .. scenario .. "\n" ..
@@ -390,14 +390,15 @@ function printCurrentStats()
     local race, _, _ = UnitRace("player")
     local playerClass, _, _ = UnitClass("player")
     local realm = GetRealmName()
-    local guildName, _, _, guildRealm = GetGuildInfo("player")
-    local _, instanceType = IsInInstance()
-    local _, _, instanceDiff = GetInstanceInfo()
+    local guildName, _, _, guildRealm = GetGuildInfo("player") or "No Data", "", "", "No Data"
+    local _, instanceType = IsInInstance() or "", "No Data"
+    local _, _, instanceDiff = GetInstanceInfo() or "", "", "No Data"
+    local scenario = C_Scenario.GetInfo() or "No Data"
 
     -- if the instance is a scenario check if delve and fill instanceType
-    if string.lower(instanceType) == "scenario" and (string.lower(C_Scenario.GetInfo()) == "delves") then
+    if string.lower(instanceType) == "scenario" and (string.lower(scenario) == "delves") then
         instanceType = C_Scenario.GetInfo()
-        instanceDiff = C_UIWidgetManager.GetScenarioHeaderDelvesWidgetVisualizationInfo(6183).tierText
+        instanceDiff = C_UIWidgetManager.GetScenarioHeaderDelvesWidgetVisualizationInfo(6183).tierText or "No Data"
     end
     charRole = UnitGroupRolesAssigned("player")
 
@@ -425,14 +426,15 @@ function getCurrentStats()
     local race, _, _ = UnitRace("player")
     local playerClass, _, _ = UnitClass("player")
     local realm = GetRealmName()
-    local guildName, _, _, guildRealm = GetGuildInfo("player")
-    local _, instanceType = IsInInstance()
-    local _, _, instanceDiff = GetInstanceInfo()
+    local guildName, _, _, guildRealm = GetGuildInfo("player") or "No Data", "", "", "No Data"
+    local _, instanceType = IsInInstance() or "", "No Data"
+    local _, _, instanceDiff = GetInstanceInfo() or "", "", "No Data"
+    local scenario = C_Scenario.GetInfo() or "No Data"
 
     -- if the instance is a scenario check if delve and fill instanceType
-    if string.lower(instanceType) == "scenario" and (string.lower(C_Scenario.GetInfo()) == "delves") then
+    if string.lower(instanceType) == "scenario" and (string.lower(scenario) == "delves") then
         instanceType = C_Scenario.GetInfo()
-        instanceDiff = C_UIWidgetManager.GetScenarioHeaderDelvesWidgetVisualizationInfo(6183).tierText
+        instanceDiff = C_UIWidgetManager.GetScenarioHeaderDelvesWidgetVisualizationInfo(6183).tierText or "No Data"
     end
     charRole = UnitGroupRolesAssigned("player")
 
@@ -576,7 +578,7 @@ function setStartXP()
     local race, temp1, temp2 = UnitRace("player")
     local playerClass, temp1, temp2 = UnitClass("player")
     local realm = GetRealmName()
-    local guildName, _, _, guildRealm = GetGuildInfo("player")
+    local guildName, _, _, guildRealm = GetGuildInfo("player") or "No Data", "", "", "No Data"
 
     dungeonRun.charName     = name
     dungeonRun.charRace     = race
