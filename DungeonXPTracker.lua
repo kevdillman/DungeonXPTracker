@@ -356,10 +356,6 @@ function createTextWindow(windowName, horizontalOffset, verticalOffset)
         self:SetHeight(height)
         return width, height
     end
-
-    -- add information of the last dungeon run
-    --setWindowText(textWindow)
-
 end
 
 -- sets the text format for a window
@@ -375,20 +371,6 @@ function setWindowTextFormat(window)
     windowText:SetJustifyV("TOP")
 
     return windowText
-end
-
--- sets the text string of a window
-function setWindowText(window, text)
-    displayText = ""
-    displayText = displayText .. "Last Dungeon run:\n" .. dungeonOutput(dungeonTracker.dungeons[#dungeonTracker.dungeons - 1])
-    window:SetText(displayText)
-end
-
--- sets the text string of a window
-function setWindowTextRaw(window, text)
-    displayText = ""
-    displayText = displayText .. "Last Dungeon run:\n" .. dungeonOutputRaw(dungeonTracker.dungeons[#dungeonTracker.dungeons - 1])
-    window:SetText(displayText)
 end
 
 -- prints the current zone
