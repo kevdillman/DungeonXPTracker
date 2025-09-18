@@ -135,6 +135,11 @@ dungeonFrame:SetScript("OnEvent",
                 if dungeonInfoWindowRaw then
                     dungeonInfoWindowRaw:Hide()
                 end
+
+                -- close the test window
+                if testWindow then
+                    testWindow:Hide()
+                end
             end
 
             -- command /xpt current
@@ -155,13 +160,23 @@ dungeonFrame:SetScript("OnEvent",
             -- displays the dungeon info window and the raw data windows
             if (string.lower(msg) == "demo") then
                 print("xpt window demo")
+                -- create pretty string windo
                 if dungeonInfoWindow == nil then
-                    createDungeonWindow()
+                    local windowName = "dungeonInfoWindow"
+                    createTextWindow(windowName)
                 end
+                local windowText = "Last Dungeon run:\n" .. dungeonOutput(dungeonTracker.dungeons[#dungeonTracker.dungeons - 1])
+                width, height = dungeonInfoWindow:SetText(windowText)
                 dungeonInfoWindow:Show()
+
+                -- create raw data window
                 if dungeonInfoWindowRaw == nil then
-                    createRawDungeonWindow()
+                    local windowName = "dungeonInfoWindowRaw"
+                    createTextWindow(windowName, (width*1.1))
                 end
+
+                windowText = "Last Dungeon run:\n" .. dungeonOutputRaw(dungeonTracker.dungeons[#dungeonTracker.dungeons - 1])
+                dungeonInfoWindowRaw:SetText(windowText)
                 dungeonInfoWindowRaw:Show()
             end
 
@@ -200,15 +215,14 @@ dungeonFrame:SetScript("OnEvent",
             -- command /xpt test
             -- tests stuff in text window
             if (string.lower(msg) == "test") then
-                if textWindow == nil then
-                    createTextWindow()
+                if testWindow == nil then
+                    createTextWindow("testWindow")
                 end
-                --setDynamicWindowText(textWindow, "test text")
 
                 text = dump(C_UIWidgetManager.GetScenarioHeaderDelvesWidgetVisualizationInfo(6183))
                 --text = "[this is a silly test string,"
-                textWindow:SetText(text)
-                textWindow:Show()
+                testWindow:SetText(text)
+                testWindow:Show()
             end
 
             -- command /xpt window
@@ -216,8 +230,11 @@ dungeonFrame:SetScript("OnEvent",
             if (string.lower(msg) == "window") then
                 print("xpt window creates a window")
                 if dungeonInfoWindow == nil then
-                    createDungeonWindow()
+                    local windowName = "dungeonInfoWindow"
+                    createTextWindow("dungeonInfoWindow")
                 end
+                local windowText = "Last Dungeon run:\n" .. dungeonOutput(dungeonTracker.dungeons[#dungeonTracker.dungeons - 1])
+                dungeonInfoWindow:SetText(windowText)
                 dungeonInfoWindow:Show()
             end
 
@@ -251,191 +268,16 @@ dungeonFrame:SetScript("OnEvent",
     end
 )
 
--- create the dungeonInfoWindow
-function createRawDungeonWindow()
-    local dungeonInfoWindowRaw = CreateFrame("Frame", "dungeonInfoWindowRaw", UIParent, "BackdropTemplate")
-    -- location and size
-    dungeonInfoWindowRaw:SetPoint("CENTER", UIParent, "CENTER", 250, 0)
-    dungeonInfoWindowRaw:SetSize(230, 270)
-
-    -- background
-    dungeonInfoWindowRaw:SetBackdrop(backdropInfo)
-    dungeonInfoWindowRaw:SetAlpha(.8)
-
-    -- make window movable
-    dungeonInfoWindowRaw:SetMovable(true)
-    dungeonInfoWindowRaw:EnableMouse(true)
-    dungeonInfoWindowRaw:RegisterForDrag("LeftButton")
-    dungeonInfoWindowRaw:SetScript("OnDragStart", dungeonInfoWindowRaw.StartMoving)
-    dungeonInfoWindowRaw:SetScript("OnDragStop", dungeonInfoWindowRaw.StopMovingOrSizing)
-
-    -- title:
-    local dungeonInfoWindowTitle = dungeonInfoWindowRaw:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    dungeonInfoWindowTitle:SetPoint("TOP", 0, -10)
-    dungeonInfoWindowTitle:SetText("Dungeon XP Raw Data")
-    -- make the title easy to access:
-    dungeonInfoWindowRaw.Title = dungeonInfoWindowTitle
-
-    -- create close button
-    local closeButton = CreateFrame("Button", "$parentCloseButton", dungeonInfoWindowRaw, "UIPanelButtonTemplate")
-        closeButton:SetSize(21,21)
-        closeButton:SetText("X")
-        closeButton:SetPoint("TOPRIGHT", -4, -4)
-        closeButton:SetAlpha(.8)
-        closeButton:SetScript("OnClick",
-            function(self)
-                self:GetParent():Hide()
-            end
-        )
-        dungeonInfoWindowRaw.closeButton = closeButton
-
-    -- create button to view more information about specific dungeon
-    local infoButton = CreateFrame("Button", "$parentCloseButton", dungeonInfoWindowRaw, "UIPanelButtonTemplate")
-        infoButton:SetSize(120,25)
-        infoButton:SetText("Clear Text")
-        infoButton:SetPoint("BOTTOM", 0, 10)
-        infoButton:SetAlpha(.9)
-        infoButton:SetScript("OnClick",
-            function(self)
-                dungeonInfoWindowRaw.Text:Hide()
-            end
-        )
-        dungeonInfoWindowRaw.infoButton = infoButton
-
-    -- Frames don't normally have a SetText method, but we'll add one that sets the
-    -- text of the frame's font string, and adjusts the size of the frame to match.
-    function dungeonInfoWindowRaw:SetText(text)
-        -- Set the text of the font string:
-        self.Text:SetText(text)
-
-        -- Find the width and height of the text including padding
-        local textWidth = self.Text:GetStringWidth()  + 19
-        local textHeight = self.Text:GetStringHeight() + 8
-
-        -- Find the width and height of the title and close boxes including padding
-        local titleWidth = self.Title:GetWidth() + self.closeButton:GetWidth()
-        local titleHeight = math.max(self.Title:GetHeight() + 6,  self.closeButton:GetHeight() + 4)
-
-        -- Find the width and height of the info button including padding
-        local infoButtonWidth = self.infoButton:GetWidth()
-        local infoButtonHeight = self.infoButton:GetHeight() + 8
-
-        -- Find the widest window element
-        local width = math.max(textWidth,  titleWidth, infoButtonWidth)
-
-        -- Add the heights of all window elements
-        local height = textHeight + titleHeight + infoButtonHeight
-
-        -- Adjust the width and height of the frame
-        self:SetWidth(width)
-        self:SetHeight(height)
-    end
-
-    -- Add a font string in the middle:
-    dungeonInfoWindowRaw.Text = setWindowTextFormat(dungeonInfoWindowRaw)
-
-
-    -- add information of the last dungeon run
-    setWindowTextRaw(dungeonInfoWindowRaw)
-
-end
-
--- create raw data window
-function createDungeonWindow()
-    local dungeonInfoWindow = CreateFrame("Frame", "dungeonInfoWindow", UIParent, "BackdropTemplate")
-    -- location and size
-    dungeonInfoWindow:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-    dungeonInfoWindow:SetSize(230, 325)
-
-    -- background
-    dungeonInfoWindow:SetBackdrop(backdropInfo)
-    dungeonInfoWindow:SetAlpha(.8)
-
-    -- make window movable
-    dungeonInfoWindow:SetMovable(true)
-    dungeonInfoWindow:EnableMouse(true)
-    dungeonInfoWindow:RegisterForDrag("LeftButton")
-    dungeonInfoWindow:SetScript("OnDragStart", dungeonInfoWindow.StartMoving)
-    dungeonInfoWindow:SetScript("OnDragStop", dungeonInfoWindow.StopMovingOrSizing)
-
-    -- title:
-    local dungeonInfoWindowTitle = dungeonInfoWindow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    dungeonInfoWindowTitle:SetPoint("TOP", 0, -10)
-    dungeonInfoWindowTitle:SetText("Dungeon XP Tracker")
-    -- make the title easy to access:
-    dungeonInfoWindow.Title = dungeonInfoWindowTitle
-
-    -- create close button
-    local closeButton = CreateFrame("Button", "$parentCloseButton", dungeonInfoWindow, "UIPanelButtonTemplate")
-        closeButton:SetSize(21,21)
-        closeButton:SetText("X")
-        closeButton:SetPoint("TOPRIGHT", -4, -4)
-        closeButton:SetAlpha(.8)
-        closeButton:SetScript("OnClick",
-            function(self)
-                self:GetParent():Hide()
-            end
-        )
-        dungeonInfoWindow.closeButton = closeButton
-
-    -- create button to view more information about specific dungeon
-    local infoButton = CreateFrame("Button", "$parentCloseButton", dungeonInfoWindow, "UIPanelButtonTemplate")
-        infoButton:SetSize(120,25)
-        infoButton:SetText("Clear Text")
-        infoButton:SetPoint("BOTTOM", 0, 10)
-        infoButton:SetAlpha(.9)
-        infoButton:SetScript("OnClick",
-            function(self)
-                dungeonInfoWindow.Text:Hide()
-            end
-        )
-        dungeonInfoWindow.infoButton = infoButton
-
-    -- Add a font string in the middle:
-    dungeonInfoWindow.Text = setWindowTextFormat(dungeonInfoWindow)
-
-    -- Frames don't normally have a SetText method, but we'll add one that sets the
-    -- text of the frame's font string, and adjusts the size of the frame to match.
-    function dungeonInfoWindow:SetText(text)
-        -- Set the text of the font string:
-        self.Text:SetText(text)
-
-        -- Find the width and height of the text including padding
-        local textWidth = self.Text:GetStringWidth()  + 19
-        local textHeight = self.Text:GetStringHeight() + 8
-
-        -- Find the width and height of the title and close boxes including padding
-        local titleWidth = self.Title:GetWidth() + self.closeButton:GetWidth()
-        local titleHeight = math.max(self.Title:GetHeight() + 6,  self.closeButton:GetHeight() + 4)
-
-        -- Find the width and height of the info button including padding
-        local infoButtonWidth = self.infoButton:GetWidth()
-        local infoButtonHeight = self.infoButton:GetHeight() + 8
-
-        -- Find the widest window element
-        local width = math.max(textWidth,  titleWidth, infoButtonWidth)
-
-        -- Add the heights of all window elements
-        local height = textHeight + titleHeight + infoButtonHeight
-
-        -- Adjust the width and height of the frame
-        self:SetWidth(width)
-        self:SetHeight(height)
-    end
-
-    -- add information of the last dungeon run
-    setWindowText(dungeonInfoWindow)
-
-end
-
 -- create text window
-function createTextWindow()
-    local textWindow = CreateFrame("Frame", "textWindow", UIParent, "BackdropTemplate")
+function createTextWindow(windowName, horizontalOffset, verticalOffset)
+    horizontalOffset = horizontalOffset or 0
+    verticalOffset = verticalOffset or 0
+    local textWindow = CreateFrame("Frame", windowName, UIParent, "BackdropTemplate")
     -- BackdropTemplate has a internal border line of 4 pixels
     -- UIPanelButtonTemplate has a internal border of 2 pixels
     textWindow:SetResizable(true)
     -- location and size
-    textWindow:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    textWindow:SetPoint("CENTER", UIParent, "CENTER", horizontalOffset, verticalOffset)
     textWindow:SetSize(230, 325)
 
     -- background
@@ -512,6 +354,7 @@ function createTextWindow()
         -- Adjust the width and height of the frame
         self:SetWidth(width)
         self:SetHeight(height)
+        return width, height
     end
 
     -- add information of the last dungeon run
