@@ -173,19 +173,19 @@ dungeonFrame:SetScript("OnEvent",
                 -- create pretty string windo
                 if dungeonInfoWindow == nil then
                     local windowName = "dungeonInfoWindow"
-                    createTextWindow(windowName, _, _, "Last Completed Run")
+                    createTextWindow(windowName, 0, 0, "Last Completed Run")
                 end
-                local windowText = "Last Dungeon run:\n" .. dungeonOutput(dungeonTracker.dungeons[#dungeonTracker.dungeons - 1])
-                width, height = dungeonInfoWindow:SetText(windowText)
+                local windowText = "Last Dungeon run:\n" .. dungeonOutput(dungeonTracker.dungeons[#dungeonTracker.dungeons])
+                local width, height = dungeonInfoWindow:SetText(windowText)
                 dungeonInfoWindow:Show()
 
                 -- create raw data window
                 if dungeonInfoWindowRaw == nil then
-                    local windowName = "dungeonInfoWindowRaw"
-                    createTextWindow(windowName, (width*1.1), _, "Last Completed Run")
+                    windowName = "dungeonInfoWindowRaw"
+                    createTextWindow(windowName, (width*1.1), 0, "Last Completed Run Raw")
                 end
 
-                windowText = "Last Dungeon run:\n" .. dungeonOutputRaw(dungeonTracker.dungeons[#dungeonTracker.dungeons - 1])
+                windowText = "Last Dungeon run raw:\n" .. dungeonOutputRaw(dungeonTracker.dungeons[#dungeonTracker.dungeons])
                 dungeonInfoWindowRaw:SetText(windowText)
                 dungeonInfoWindowRaw:Show()
             end
@@ -224,12 +224,15 @@ dungeonFrame:SetScript("OnEvent",
                 --text = "[this is a silly test string,"
                 local instance1, instance2 = GetInstanceInfo() or "No Data", "No Data"
                 local scenario = C_Scenario.GetInfo() or "No Data"
+                local guildName, _, _, guildRealm = GetGuildInfo("player") or "No Data", "", "", "No Data"
                 local text = "instance1: " .. instance1 .. "\n" ..
                             "instance2: " .. instance2 .. "\n" ..
                             "scenario: " .. scenario .. "\n" ..
                             "dungeonRun.instanceType: " .. dungeonRun.instanceType .. "\n"..
                             "areaCheck: " .. tostring(areaCheck) .. "\n" ..
-                            "dungeonRun.instanceDiff: " .. dungeonRun.instanceDiff
+                            "dungeonRun.instanceDiff: " .. dungeonRun.instanceDiff .. "\n" ..
+                            "guildname: " .. guildName .. "\n" ..
+                            "guildRealm: " .. guildRealm
 
                 testWindow:SetText(text)
                 testWindow:Show()
@@ -243,7 +246,7 @@ dungeonFrame:SetScript("OnEvent",
                     local windowName = "dungeonInfoWindow"
                     createTextWindow("dungeonInfoWindow", _, _, "Last Completed Run")
                 end
-                local windowText = "Last Dungeon run:\n" .. dungeonOutput(dungeonTracker.dungeons[#dungeonTracker.dungeons - 1])
+                local windowText = "Last Dungeon run:\n" .. dungeonOutput(dungeonTracker.dungeons[#dungeonTracker.dungeons])
                 dungeonInfoWindow:SetText(windowText)
                 dungeonInfoWindow:Show()
             end
@@ -286,10 +289,11 @@ function createTextWindow(windowName, horizontalOffset, verticalOffset, titleTex
     local textWindow = CreateFrame("Frame", windowName, UIParent, "BackdropTemplate")
     -- BackdropTemplate has a internal border line of 4 pixels
     -- UIPanelButtonTemplate has a internal border of 2 pixels
-    textWindow:SetResizable(true)
+
     -- location and size
     textWindow:SetPoint("CENTER", UIParent, "CENTER", horizontalOffset, verticalOffset)
     textWindow:SetSize(230, 325)
+    textWindow:SetResizable(true)
 
     -- background
     textWindow:SetBackdrop(backdropInfo)
@@ -325,12 +329,18 @@ function createTextWindow(windowName, horizontalOffset, verticalOffset, titleTex
     -- create button to view more information about specific dungeon
     local infoButton = CreateFrame("Button", "$parentCloseButton", textWindow, "UIPanelButtonTemplate")
         infoButton:SetSize(120,25)
-        infoButton:SetText("Clear Text")
+        infoButton:SetText("Hide Text")
         infoButton:SetPoint("BOTTOM", 0, 6)
         infoButton:SetAlpha(.9)
         infoButton:SetScript("OnClick",
             function(self)
-                textWindow.Text:Hide()
+                if textWindow.Text:IsShown() then
+                    infoButton:SetText("Show text")
+                    textWindow.Text:Hide()
+                else
+                    infoButton:SetText("Hide Text")
+                    textWindow.Text:Show()
+                end
             end
         )
         textWindow.infoButton = infoButton
@@ -441,19 +451,19 @@ function getCurrentStats()
     local text = "Your playing: " .. name .. "\n"
     .. "Your current race: " ..  race .. "\n"
     .. "Your class is: " ..  playerClass .. "\n"
-    .. "Your role is:" ..  charRole .. "\n"
+    .. "Your role is: " ..  charRole .. "\n"
     .. "Your realm is: " ..  realm .. "\n"
     .. "Your guild is: " ..  guildName .. "\n"
     .. "Your guild's realm is: " ..  guildRealm .. "\n"
     .. "The current time is: " ..  date("%d/%m/%y %H:%M:%S") .. "\n"
-    .. "Current XP is:" ..  UnitXP("player") .. "\n"
-    .. "Current rest XP is:" ..  GetXPExhaustion() .. "\n"
-    .. "Your current lvl is:" ..  UnitLevel("player") .. "\n"
-    .. "Current max lvl XP is:" ..  UnitXPMax("player") .. "\n"
-    .. "Current gold:" ..  math.floor((GetMoney()/10000)) .. "\n"
-    .. "You're currently in:" ..  getZone() .. "\n"
-    .. "Your instance type is:" ..  instanceType .. "\n"
-    .. "Your instance diff is:" ..  instanceDiff .. "\n"
+    .. "Current XP is: " ..  UnitXP("player") .. "\n"
+    .. "Current rest XP is: " ..  GetXPExhaustion() .. "\n"
+    .. "Your current lvl is: " ..  UnitLevel("player") .. "\n"
+    .. "Current max lvl XP is: " ..  UnitXPMax("player") .. "\n"
+    .. "Current gold: " ..  math.floor((GetMoney()/10000)) .. "\n"
+    .. "You're currently in: " ..  getZone() .. "\n"
+    .. "Your instance type is: " ..  instanceType .. "\n"
+    .. "Your instance diff is: " ..  instanceDiff .. "\n"
 
     return text
 end
