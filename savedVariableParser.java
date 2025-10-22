@@ -10,6 +10,9 @@
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class savedVariableParser{
 
@@ -48,6 +51,48 @@ public class savedVariableParser{
         return table;
     }*/
 
+    // parse Lua-style data
+    public static List<Map<String, String>> parseDungeonData(String fileData) {
+        List<Map<String, String>> result = new ArrayList<>();
+
+        // isolate ["dungeons"] section
+        Pattern dungeonsSectionPattern = Pattern.compile("\\[\"dungeons\"\\]\\s*=\\s*\\{(.*)\\}\\s*,?\\s*\\}", Pattern.DOTALL);
+        Matcher dungeonSectionMatcher = dungeonsSectionPattern.matcher(fileData);
+
+        if (!dungeonSectionMatcher.find()) {
+            System.out.println("No [\"dungeons\"] section found!");
+            return result;
+        }
+
+        // fill string with unprocessed dungeon data
+        String dungeonsBlock = dungeonSectionMatcher.group(1);
+
+        // extract each individual dungeon run block
+        Pattern dungeonPattern = Pattern.compile("\\{(.*?)\\}", Pattern.DOTALL);
+        Matcher matcher = dungeonPattern.matcher(dungeonsBlock);
+
+        while (matcher.find()) {
+            String block = matcher.group(1);
+            Map<String, String> dungeonRun = new HashMap<>();
+
+            // find key/value pairs like ["key"] = "value"
+            Pattern keyValuePattern = Pattern.compile("\\[\"(.*?)\"\\]\\s*=\\s*\"?(.*?)\"?(,|$)");
+            Matcher keyValueMatcher = keyValuePattern.matcher(block);
+
+            while (keyValueMatcher.find()) {
+                String key = keyValueMatcher.group(1);
+                String value = keyValueMatcher.group(2);
+                dungeonRun.put(key, value);
+            }
+
+            if (!dungeonRun.isEmpty()) {
+                result.add(dungeonRun);
+            }
+        }
+
+        return result;
+    }
+
     // takes a path to a file and parses the contents of that file
     public static void main(String[] args) {
         // check for arguments
@@ -63,8 +108,15 @@ public class savedVariableParser{
         // check that the file given exists and prints first 500 characters
         try{
             String fileContents = Files.readString(Path.of(filePath));
-            System.out.println("\nFile contents (first 500 chars):");
-            System.out.println(fileContents.substring(0, Math.min(fileContents.length(), 500)));
+            //System.out.println("\nFile contents (first 500 chars):");
+            //System.out.println(fileContents.substring(0, Math.min(fileContents.length(), 500)));
+
+            List<Map<String, String>> runs = parseDungeonData(fileContents);
+            System.out.println("Parsed " + runs.size() + " dungeon runs.");
+            System.out.println("List contents:");
+            for (int i = 0; i < 5; ++i){
+                System.out.println(runs.get(i));
+            }
         }
         catch (IOException e) {
             System.out.println("Error reading file: " + e.getMessage());

@@ -87,7 +87,7 @@ def getPaths(pathsDoc):
     return accounts, savedVarsPath
 
 def getDataJava(inputFile, outputFile):
-    cmd = [java, "-jar", "LuaParser.jar", inputFile]
+    cmd = [java, "-jar", "savedVariableParser.jar", inputFile]
     subprocess.run(cmd, check=True)
     return pd.read_csv(outputFile)
 
