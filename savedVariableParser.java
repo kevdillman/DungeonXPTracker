@@ -13,65 +13,29 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.io.FileWriter;
 
 public class savedVariableParser{
 
-    /*public List<Map<String, String>> parse(String luaData) {
-        List<Map<String, String>> tables = new ArrayList<>();
-
-        int tableStart = luaData.indexOf('{');
-        while (tableStart != -1) {
-            int tableEnd = luaData.indexOf('}', tableStart);
-            if (tableEnd == -1) break;
-
-            String tableText = luaData.substring(tableStart, tableEnd + 1);
-            Map<String, String> table = parseTable(tableText);
-            if (!table.isEmpty()) {
-                tables.add(table);
-            }
-
-            tableStart = luaData.indexOf('{', tableEnd);
-        }
-
-        return tables;
-    }
-
-    private Map<String, String> parseTable(String tableText) {
-        Map<String, String> table = new HashMap<>();
-
-        Pattern pattern = Pattern.compile("\\[\"(.*?)\"\\]\\s*=\\s*\"?(.*?)\"?,");
-        Matcher matcher = pattern.matcher(tableText);
-
-        while (matcher.find()) {
-            String key = matcher.group(1);
-            String value = matcher.group(2);
-            table.put(key, value);
-        }
-
-        return table;
-    }*/
-
    // reformats dates to be easier to use during data processing steps
-   private static String formatDate(String rawDate){
+    private static String formatDate(String rawDate){
+        // check that date field is populated
+        if (rawDate == null || rawDate == "No Data"){
+            return rawDate; // skip bad data
+        }
 
-    // check that date field is populated
-    if (rawDate == null || rawDate == "No Data"){
-        return rawDate; // skip bad data
+        // extract year/month/day and time info
+        // reformat to more typical layout
+        try {
+            String year = "20" + rawDate.substring(6, 8);
+            String month = rawDate.substring(3, 5);
+            String day = rawDate.substring(0, 2);
+            String formattedDate = month + "/" + day + "/" + year + rawDate.substring(8);
+            return formattedDate;
+        } catch (Exception e) {
+            return rawDate; // fallback if malformed
+        }
     }
-
-    // extract year/month/day and time info
-    // reformat to more typical layout
-    try {
-        String year = "20" + rawDate.substring(6, 8);
-        String month = rawDate.substring(3, 5);
-        String day = rawDate.substring(0, 2);
-        String formattedDate = month + "/" + day + "/" + year + rawDate.substring(8);
-        return formattedDate;
-    } catch (Exception e) {
-        return rawDate; // fallback if malformed
-    }
-}
-
 
     // parse Lua-style data
     private static List<Map<String, String>> parseDungeonData(String fileData){
@@ -129,7 +93,45 @@ public class savedVariableParser{
             }
         }
 
+        // reformat date time fields
+        for (Map<String, String> run : result){
+            run.put("startTime", formatDate(run.get("startTime")));
+            run.put("endingTime", formatDate(run.get("endingTime")));
+        }
         return result;
+    }
+
+    // writes passed data to a csv file at passed output path
+    private static void writeCSV(List<Map<String, String>> data, String outputPath){
+        if (data.isEmpty()){
+            System.out.println("No data to write.");
+            return;
+        }
+
+        try (FileWriter writer = new FileWriter(outputPath)){
+            // Collect all unique keys
+            Set<String> headers = new LinkedHashSet<>();
+            for (Map<String, String> row : data) {
+                headers.addAll(row.keySet());
+            }
+
+            // Write header
+            writer.write(String.join(",", headers) + "\n");
+            int rowCounter = 0;
+            // Write rows
+            for (Map<String, String> row : data) {
+                List<String> values = new ArrayList<>();
+                for (String key : headers) {
+                    String value = row.getOrDefault(key, "");
+                    values.add("\"" + value.replace("\"", "\"\"") + "\"");
+                }
+                writer.write(rowCounter + String.join(",", values) + "\n");
+                ++rowCounter;
+            }
+
+        } catch (IOException e) {
+            System.out.println("Error writing CSV: " + e.getMessage());
+        }
     }
 
     // takes a path to a file and parses the contents of that file
@@ -144,22 +146,26 @@ public class savedVariableParser{
         String filePath = args[0];
         System.out.println("Reading file: " + filePath);
 
-        // check that the file given exists and prints first 500 characters
+        // check that the file given exists and parses it's data
         try{
             String fileContents = Files.readString(Path.of(filePath));
-            //System.out.println("\nFile contents (first 500 chars):");
-            //System.out.println(fileContents.substring(0, Math.min(fileContents.length(), 500)));
 
             List<Map<String, String>> runs = parseDungeonData(fileContents);
             System.out.println("Parsed " + runs.size() + " dungeon runs.");
-            System.out.println("List contents:");
+            /*System.out.println("List contents:");
             for (int i = 0; i < 5; ++i){
                 System.out.println(runs.get(i));
-            }
-            System.out.println(runs.get((runs.size())-1));
+            }*/
+            //System.out.println(runs.get((runs.size())-1));
+
+            // write the parsed data to a csv
+            String accountName = args[1];
+            String outputPath = "./dungeon_runs/" + accountName + "_dungeonDataJAVA.csv";
+            writeCSV(runs, outputPath);
+            System.out.println("CSV written to " + outputPath);
         }
-        catch (IOException e) {
-            System.out.println("Error reading file: " + e.getMessage());
+        catch(IOException e){
+            System.out.println("Error reading or writing file: " + e.getMessage());
         }
     }
 }

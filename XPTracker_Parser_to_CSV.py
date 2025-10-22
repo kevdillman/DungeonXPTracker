@@ -119,7 +119,6 @@ if __name__ == '__main__':
 
         exportPath = "./dungeon_runs/" + accounts[i][accountDisplayName] + "_dungeonData.csv"
         lvlingData.to_csv(exportPath)
-        exportPath = "./dungeon_runs/+"
         print("exported:", accounts[i][accountDisplayName] + "_dungeonData.csv")
 
         # add data to SQL Database

@@ -27,7 +27,7 @@ if __name__ == '__main__':
         print(f"compiling {fName} complete")
 
         java  = "C:\\Users\\kevdi\\Documents\\Java\\jdk-21.0.9\\bin\\java.exe"
-        cmd = [java, className, accountPath]
+        cmd = [java, className, accountPath, accounts[0][0]]
 
         print(f"running java class {className}")
         subprocess.run(cmd, check=True)
