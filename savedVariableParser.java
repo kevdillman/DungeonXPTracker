@@ -52,7 +52,7 @@ public class savedVariableParser{
     }*/
 
     // parse Lua-style data
-    public static List<Map<String, String>> parseDungeonData(String fileData){
+    private static List<Map<String, String>> parseDungeonData(String fileData){
         List<Map<String, String>> result = new ArrayList<>();
 
         // isolate ["dungeons"] section
