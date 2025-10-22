@@ -53,8 +53,8 @@ dungeonFrame:SetScript("OnEvent",
         -- check for entry to a delve
         if (event == "SCENARIO_UPDATE" and IsInInstance() and (C_Scenario.GetInfo() == "Delves") and not inInstance) then
             print("In a Delve!")
-            instanceName = GetInstanceInfo()
-            difficulty = C_UIWidgetManager.GetScenarioHeaderDelvesWidgetVisualizationInfo(6183).tierText
+            local instanceName = GetInstanceInfo()
+            local difficulty = C_UIWidgetManager.GetScenarioHeaderDelvesWidgetVisualizationInfo(6183).tierText
             print("In", instanceName, "at tier", difficulty)
             inInstance = true
             flushTable()
@@ -438,6 +438,7 @@ function getCurrentStats()
     local realm = GetRealmName()
     local guildName, _, _, guildRealm = GetGuildInfo("player") or "No Data", "", "", "No Data"
     local _, instanceType = IsInInstance() or "", "No Data"
+    local restXP = GetXPExhaustion() or 0
     local _, _, instanceDiff = GetInstanceInfo() or "", "", "No Data"
     local scenario = C_Scenario.GetInfo() or "No Data"
 
@@ -457,7 +458,7 @@ function getCurrentStats()
     .. "Your guild's realm is: " ..  guildRealm .. "\n"
     .. "The current time is: " ..  date("%d/%m/%y %H:%M:%S") .. "\n"
     .. "Current XP is: " ..  UnitXP("player") .. "\n"
-    .. "Current rest XP is: " ..  GetXPExhaustion() .. "\n"
+    .. "Current rest XP is: " ..  restXP .. "\n"
     .. "Your current lvl is: " ..  UnitLevel("player") .. "\n"
     .. "Current max lvl XP is: " ..  UnitXPMax("player") .. "\n"
     .. "Current gold: " ..  math.floor((GetMoney()/10000)) .. "\n"

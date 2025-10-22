@@ -1,6 +1,6 @@
 # Parser for saved variable file from DungeonXPTracker addon
 # to csv that can be used with excel
-# v0.1 by PuggyBerra and Squealz
+# v1.0 by PuggyBerra and Squealz
 # 12 Feb 2024
 
 import sys
@@ -9,9 +9,10 @@ import numpy as np
 from datetime import date
 from pathlib import Path
 from savedVariableParser import getData
-print("loading SQLIntegration")
 from SQLIntegration import addData
-print("SQLIntegration loaded")
+import subprocess
+
+java = "C:\\Users\\kevdi\\Documents\\Java\\jdk-21.0.9\\bin\\java.exe"
 
 # gets the account name and path to account's saved variables
 def getPaths(pathsDoc):
@@ -84,6 +85,11 @@ def getPaths(pathsDoc):
         print("No account found")
 
     return accounts, savedVarsPath
+
+def getDataJava(inputFile, outputFile):
+    cmd = [java, "-jar", "LuaParser.jar", inputFile]
+    subprocess.run(cmd, check=True)
+    return pd.read_csv(outputFile)
 
 if __name__ == '__main__':
     # read the path to the saved variables file and the account
