@@ -52,14 +52,14 @@ public class savedVariableParser{
     }*/
 
     // parse Lua-style data
-    public static List<Map<String, String>> parseDungeonData(String fileData) {
+    public static List<Map<String, String>> parseDungeonData(String fileData){
         List<Map<String, String>> result = new ArrayList<>();
 
         // isolate ["dungeons"] section
         Pattern dungeonsSectionPattern = Pattern.compile("\\[\"dungeons\"\\]\\s*=\\s*\\{(.*)\\}\\s*,?\\s*\\}", Pattern.DOTALL);
         Matcher dungeonSectionMatcher = dungeonsSectionPattern.matcher(fileData);
 
-        if (!dungeonSectionMatcher.find()) {
+        if (!dungeonSectionMatcher.find()){
             System.out.println("No [\"dungeons\"] section found!");
             return result;
         }
@@ -71,7 +71,8 @@ public class savedVariableParser{
         Pattern dungeonPattern = Pattern.compile("\\{(.*?)\\}", Pattern.DOTALL);
         Matcher matcher = dungeonPattern.matcher(dungeonsBlock);
 
-        while (matcher.find()) {
+        // build list with all dungeon run data found
+        while (matcher.find()){
             String block = matcher.group(1);
             Map<String, String> dungeonRun = new HashMap<>();
 
@@ -79,14 +80,30 @@ public class savedVariableParser{
             Pattern keyValuePattern = Pattern.compile("\\[\"(.*?)\"\\]\\s*=\\s*\"?(.*?)\"?(,|$)");
             Matcher keyValueMatcher = keyValuePattern.matcher(block);
 
-            while (keyValueMatcher.find()) {
+            while (keyValueMatcher.find()){
                 String key = keyValueMatcher.group(1);
                 String value = keyValueMatcher.group(2);
                 dungeonRun.put(key, value);
             }
 
-            if (!dungeonRun.isEmpty()) {
+            if (!dungeonRun.isEmpty()){
                 result.add(dungeonRun);
+            }
+        }
+
+        // build the set of all found keys
+        Set<String> allKeys = new HashSet<>();
+        for (Map<String, String> run : result){
+            allKeys.addAll(run.keySet());
+        }
+
+        // normalize all runs to contain same keys and fill
+        // any missing entries with No Data
+        for (Map<String, String> run : result){
+            for (String key : allKeys){
+                if (!run.containsKey(key)){
+                    run.put(key, "No Data");
+                }
             }
         }
 
@@ -117,6 +134,7 @@ public class savedVariableParser{
             for (int i = 0; i < 5; ++i){
                 System.out.println(runs.get(i));
             }
+            System.out.println(runs.get((runs.size())-1));
         }
         catch (IOException e) {
             System.out.println("Error reading file: " + e.getMessage());
