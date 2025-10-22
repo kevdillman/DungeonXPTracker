@@ -51,6 +51,28 @@ public class savedVariableParser{
         return table;
     }*/
 
+   // reformats dates to be easier to use during data processing steps
+   private static String formatDate(String rawDate){
+
+    // check that date field is populated
+    if (rawDate == null || rawDate == "No Data"){
+        return rawDate; // skip bad data
+    }
+
+    // extract year/month/day and time info
+    // reformat to more typical layout
+    try {
+        String year = "20" + rawDate.substring(6, 8);
+        String month = rawDate.substring(3, 5);
+        String day = rawDate.substring(0, 2);
+        String formattedDate = month + "/" + day + "/" + year + rawDate.substring(8);
+        return formattedDate;
+    } catch (Exception e) {
+        return rawDate; // fallback if malformed
+    }
+}
+
+
     // parse Lua-style data
     private static List<Map<String, String>> parseDungeonData(String fileData){
         List<Map<String, String>> result = new ArrayList<>();
