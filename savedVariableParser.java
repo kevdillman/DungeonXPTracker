@@ -1,7 +1,6 @@
 /*
     replaces savedVariableParser.py
-    -takes a file path to a saved variable file of lua table data
-    -will:
+    given a file path to a saved variable file of lua table data and output path for a csv:
         -find all data tags in file
         -build structured data from parsed data
         -output a csv file of the parsed data
@@ -26,13 +25,14 @@ public class savedVariableParser{
 
         // extract year/month/day and time info
         // reformat to more typical layout
-        try {
+        try{
             String year = "20" + rawDate.substring(6, 8);
             String month = rawDate.substring(3, 5);
             String day = rawDate.substring(0, 2);
             String formattedDate = month + "/" + day + "/" + year + rawDate.substring(8);
             return formattedDate;
-        } catch (Exception e) {
+        }
+        catch (Exception e){
             return rawDate; // fallback if malformed
         }
     }
@@ -101,7 +101,7 @@ public class savedVariableParser{
         return result;
     }
 
-    // writes passed data to a csv file at passed output path
+    // writes passed data to a csv file specified in the passed output path
     private static void writeCSV(List<Map<String, String>> data, String outputPath){
         if (data.isEmpty()){
             System.out.println("No data to write.");
@@ -116,26 +116,30 @@ public class savedVariableParser{
             }
 
             // Write header
-            writer.write(String.join(",", headers) + "\n");
+            writer.write("rowCounter," + String.join(",", headers) + "\n");
             int rowCounter = 0;
             // Write rows
-            for (Map<String, String> row : data) {
+            for (Map<String, String> row : data){
                 List<String> values = new ArrayList<>();
-                for (String key : headers) {
+
+                for (String key : headers){
                     String value = row.getOrDefault(key, "");
+
+                    // escape double quotes
                     values.add("\"" + value.replace("\"", "\"\"") + "\"");
                 }
-                writer.write(rowCounter + String.join(",", values) + "\n");
+
+                writer.write("\"" + rowCounter + "\"," + String.join(",", values) + "\n");
                 ++rowCounter;
             }
-
-        } catch (IOException e) {
+        }
+        catch (IOException e){
             System.out.println("Error writing CSV: " + e.getMessage());
         }
     }
 
     // takes a path to a file and parses the contents of that file
-    public static void main(String[] args) {
+    public static void main(String[] args){
         // check for arguments
         if(args.length == 0){
             System.out.println("No arguments");
@@ -152,11 +156,6 @@ public class savedVariableParser{
 
             List<Map<String, String>> runs = parseDungeonData(fileContents);
             System.out.println("Parsed " + runs.size() + " dungeon runs.");
-            /*System.out.println("List contents:");
-            for (int i = 0; i < 5; ++i){
-                System.out.println(runs.get(i));
-            }*/
-            //System.out.println(runs.get((runs.size())-1));
 
             // write the parsed data to a csv
             String accountName = args[1];

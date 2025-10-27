@@ -8,11 +8,14 @@ import subprocess
 from pathlib import Path
 from XPTracker_Parser_to_CSV import getPaths
 
+# example command to use driver script:
+# python .\javaCompiler.py savedVariableParser.java
 if __name__ == '__main__':
     javac = "C:\\Users\\kevdi\\Documents\\Java\\jdk-21.0.9\\bin\\javac.exe"
     fileData = Path('./path.txt').read_text()
     accounts, savedVarsPath = getPaths(fileData)
 
+    # path to file to parse dungeon data
     accountPath = savedVarsPath + accounts[0][0] + "\\SavedVariables\\DungeonXPTracker.lua"
 
     if sys.argv[1]:
